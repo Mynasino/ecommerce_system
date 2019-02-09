@@ -6,6 +6,7 @@ import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.service.AdminService;
 import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.security.util.JWTUtil;
+import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.ResponseUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,6 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.Date;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
@@ -35,9 +38,13 @@ public class LoginController {
                             @RequestParam("password") String password,
                             HttpServletResponse response) {
         String info = userService.loginUser(userName, password);
-        if (info.equals("success"))
-            return ResponseUtil.JSONResponse(SC_OK,
-                    new JWTInfo(JWTUtil.HEADER_KEY, JWTUtil.getJWTString(userName, AuthenticationLevel.USER)), response);
+        if (info.equals("success")) {
+            Date expiredTime = new Date();
+            String jwtString = JWTUtil.getJWTString(userName, AuthenticationLevel.USER, expiredTime);
+            Statistic.onlineUsers.put(userName, expiredTime);
+
+            return ResponseUtil.JSONResponse(SC_OK, new JWTInfo(JWTUtil.HEADER_KEY, jwtString), response);
+        }
         else
             return ResponseUtil.JSONResponse(SC_BAD_REQUEST,
                     new ErrorInfo(info), response);
@@ -48,11 +55,9 @@ public class LoginController {
                              @RequestParam("password") String password,
                              HttpServletResponse response) {
         String info = adminService.loginAdmin(adminName, password);
-        if (info.equals("success"))
-            return ResponseUtil.JSONResponse(SC_OK,
-                    new JWTInfo(JWTUtil.HEADER_KEY, JWTUtil.getJWTString(adminName, AuthenticationLevel.ADMIN)), response);
-        else
-            return ResponseUtil.JSONResponse(SC_BAD_REQUEST,
-                    new ErrorInfo(info), response);
+        return info.equals("success") ?
+                ResponseUtil.JSONResponse(SC_OK,
+                        new JWTInfo(JWTUtil.HEADER_KEY, JWTUtil.getJWTString(adminName, AuthenticationLevel.ADMIN, new Date())), response) :
+                ResponseUtil.JSONResponse(SC_BAD_REQUEST, new ErrorInfo(info), response);
     }
 }

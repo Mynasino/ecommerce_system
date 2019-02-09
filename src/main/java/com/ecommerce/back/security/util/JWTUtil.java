@@ -14,12 +14,13 @@ public class JWTUtil {
     public static final String HEADER_KEY = "Authentication";
     public static final String SPECIFIC_PARAM_NAME = "IndividualName";
 
-    public static String getJWTString(String userName, AuthenticationLevel authenticationLevel) {
+    public static String getJWTString(String userName, AuthenticationLevel authenticationLevel, Date expiredTime) {
+        expiredTime.setTime(System.currentTimeMillis() + EXPIRED_TIME);
         return TOKEN_PREFIX +
                 Jwts.builder()
                 .claim("authenticationLevel", authenticationLevel.name)
                 .setSubject(userName)
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRED_TIME))
+                .setExpiration(expiredTime)
                 .signWith(SignatureAlgorithm.HS512, SECRET)
                 .compact();
     }
