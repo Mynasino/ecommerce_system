@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<!--配置-->
+<configuration>
+    <!--属性-->
+    <!--<properties></properties>-->
+    <!--设置-->
+    <!--<settings>-->
+    <!--<setting name="" value=""/>-->
+    <!--</settings>-->
+    <settings>
+        <setting name="lazyLoadingEnabled" value="true"/>
+        <setting name="aggressiveLazyLoading" value="true" />
+        <setting name="mapUnderscoreToCamelCase" value="true" />
+    </settings>
+    <!--类型命名-->
+    <!--<typeAliases></typeAliases>-->
+    <!--类型处理器-->
+    <!--<typeHandlers></typeHandlers>-->
+    <!--对象工厂-->
+    <!--<objectFactory type=""/>-->
+    <!--插件-->
+    <!--<plugins>-->
+    <!--<plugin interceptor=""></plugin>-->
+    <!--</plugins>-->
+    <!--配置环境-->
+    <!--数据库厂商标识-->
+    <!--<databaseIdProvider type=""/>-->
+    <!--映射器-->
+    <!--<mappers></mappers>-->
+</configuration>
