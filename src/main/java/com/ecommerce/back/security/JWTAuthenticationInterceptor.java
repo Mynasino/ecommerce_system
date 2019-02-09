@@ -1,10 +1,8 @@
 package com.ecommerce.back.security;
 
 import com.alibaba.fastjson.JSONObject;
-import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.util.IOUtil;
 import com.ecommerce.back.security.util.JWTUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -20,13 +18,6 @@ import static javax.servlet.http.HttpServletResponse.*;
 
 @Component
 public class JWTAuthenticationInterceptor implements HandlerInterceptor {
-    private UserService userService;
-
-    @Autowired
-    public JWTAuthenticationInterceptor(UserService userService) {
-        this.userService = userService;
-    }
-
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object object) throws IOException {
         //If it is not mapped to a method, pass directly

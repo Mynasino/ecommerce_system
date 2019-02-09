@@ -3,6 +3,7 @@ package com.ecommerce.back.util;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.HashSet;
 import java.util.Set;
@@ -35,5 +36,16 @@ public class ImgUtil {
         fos.close();
 
         return fileName;
+    }
+
+    public static String[] MultiBase64BytesToLocalImg(String[] imgBase64Strings, String[] imgTypes) throws IOException, IllegalStateException {
+        String[] imgUrls = new String[imgBase64Strings.length];
+        for (int i = 0; i < imgBase64Strings.length; i++) {
+            byte[] base64ImgBytes = imgBase64Strings[i].getBytes(StandardCharsets.UTF_8);
+            String imgType = imgTypes[i];
+            imgUrls[i] = ImgUtil.Base64BytesToLocalImg(base64ImgBytes, imgType);
+        }
+
+        return imgUrls;
     }
 }

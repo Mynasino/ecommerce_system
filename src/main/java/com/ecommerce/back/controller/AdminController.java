@@ -22,7 +22,7 @@ import java.util.Set;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @RestController
-@RequestMapping("/admin")
+@RequestMapping(value = "/admin", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
 public class AdminController {
     private UserService userService;
 
@@ -32,7 +32,7 @@ public class AdminController {
     }
 
     @ApiOperation(value = "Get Online Users")
-    @GetMapping(value = "/onlineUsers", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @GetMapping(value = "/onlineUsers")
     public String getOnlineStatistic(HttpServletResponse response) {
         Set<String> keySet = Statistic.onlineUsers.keySet();
         return ResponseUtil.JSONResponse(SC_OK, new OnlineUsersInfo(keySet.size(), keySet), response);
@@ -41,7 +41,7 @@ public class AdminController {
     @ApiOperation(value = "Query a user with user himself or ADMIN authority")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER, AuthenticationLevel.ADMIN}, specifics = {true, false})
-    @GetMapping(value = "/user", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @GetMapping(value = "/user")
     public String queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
                             HttpServletResponse response) {
         User user = userService.getUserByUserName(individualName);
@@ -53,7 +53,7 @@ public class AdminController {
     @ApiOperation(value = "modify password")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
-    @PatchMapping(value = "/user", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @PutMapping(value = "/user")
     public String modifyUser(@RequestBody RegisterInfo registerInfo,
                              @RequestParam("userId") int id,
                              HttpServletResponse response) {
@@ -64,7 +64,7 @@ public class AdminController {
     @ApiOperation(value = "Delete a user with ADMIN authority")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
-    @DeleteMapping(value = "/user", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @DeleteMapping(value = "/user")
     public String deleteUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
                              HttpServletResponse response) {
         String info = userService.deleteUser(individualName);

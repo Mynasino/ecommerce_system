@@ -24,7 +24,7 @@ import java.util.Set;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @RestController //@Controller + @ResponseBody + return entity
-@RequestMapping("/user")
+@RequestMapping(value = "/user", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
 public class UserController {
     private UserService userService;
 
@@ -34,7 +34,7 @@ public class UserController {
     }
 
     @ApiOperation(value = "Register a user")
-    @PostMapping(consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE}, produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @PostMapping(consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public String register(@RequestBody RegisterInfo registerInfo, HttpServletResponse response) {
         String info = userService.registerUser(registerInfo);
         return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
@@ -43,7 +43,7 @@ public class UserController {
     @ApiOperation(value = "modify password")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
-    @PatchMapping(produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
+    @PatchMapping
     public String modifyPassWord(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
                                  @RequestParam("newPassword") String newPassword,
                                  HttpServletResponse response) {

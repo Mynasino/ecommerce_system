@@ -13,20 +13,24 @@ import org.springframework.stereotype.Repository;
 @Mapper
 public interface ProductDAO {
     String TABLE_NAME = "product";
-    String SELECT_FIELDS = "id,name,sub_title,price,stock,sale_count";
-    String INSERT_FIELDS_DB = "name,sub_title,price,stock,sale_count";
-    String INSERT_FIELDS = "#{name},#{subTitle},#{price},#{stock},#{saleCount}";
+    String SELECT_FIELDS = "id,name,sub_title,price,stock,sale_count,img_urls,category_second_id";
+    String INSERT_FIELDS_DB = "name,sub_title,price,stock,sale_count,img_urls,category_second_id";
+    String INSERT_FIELDS = "#{name},#{subTitle},#{price},#{stock},#{saleCount},#{imgUrls},#{categorySecondId}";
+    String UPDATE_FIELDS = "name = #{name}, sub_title = #{subTitle}, price = #{price}, stock = #{stock}, sale_count = #{saleCount}, img_urls = #{imgUrls}, category_second_id = #{categorySecondId}";
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     Product getProductById(int id);
 
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE name = #{name}"})
+    Product getProductByName(String name);
+
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    void addProduct(Product product);
+    int addProduct(Product product);
 
-    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    void deleteProductById(int id);
+    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
+    int deleteProductByName(String name);
 
-    //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
-    //void updateLoginTicketStatus(String ticket);
+    @Update(value = {"UPDATE ", TABLE_NAME, " SET ", UPDATE_FIELDS ," WHERE id = #{id}"})
+    int updateProduct(Product product);
 }

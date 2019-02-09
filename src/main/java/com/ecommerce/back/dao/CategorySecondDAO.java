@@ -20,12 +20,15 @@ public interface CategorySecondDAO {
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     CategorySecond getCategorySecondById(int id);
 
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE name = #{name}"})
+    CategorySecond getCategorySecondByName(String name);
+
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    void addCategorySecond(CategorySecond categorySecond);
+    int addCategorySecond(CategorySecond categorySecond);
 
-    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    void deleteCategorySecondById(int id);
+    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
+    int deleteCategorySecondByName(String name);
 
     //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
     //void updateLoginTicketStatus(String ticket);

@@ -7,6 +7,12 @@ public class CategoryFirst {
     private String name;
     private int count;
 
+    public CategoryFirst(int id, String name, int count) {
+        this.id = id;
+        this.name = name;
+        this.count = count;
+    }
+
     public int getId() {
         return id;
     }

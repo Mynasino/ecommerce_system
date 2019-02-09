@@ -7,7 +7,7 @@ import io.jsonwebtoken.*;
 import java.util.Date;
 
 public class JWTUtil {
-    private static final long EXPIRED_TIME = 60 * 1000;
+    private static final long EXPIRED_TIME = 10 * 60 * 1000;
     private static final String SECRET = "d20wss@P";
     private static final String TOKEN_PREFIX = "Bearer ";
 

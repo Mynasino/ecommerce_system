@@ -42,12 +42,8 @@ public class UserService {
             userDAO.addUser(user);
 
             return "success";
-        }  catch (IllegalStateException e) {
-            e.printStackTrace();
-            return "imgType not support";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "server IOException";
+        }  catch (Exception e) {
+            return e.getMessage();
         }
     }
 
@@ -84,12 +80,8 @@ public class UserService {
             user.setId(userId);
             UserUtil.passwordEncode(user);
             return (userDAO.updateUser(user)) > 0 ? "success" : "update user " + user.getUserName() + " failed";
-        }  catch (IllegalStateException e) {
-            e.printStackTrace();
-            return "imgType not support";
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "server IOException";
+        }  catch (Exception e) {
+            return e.getMessage();
         }
     }
 

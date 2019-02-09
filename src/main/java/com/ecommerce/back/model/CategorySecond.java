@@ -8,6 +8,13 @@ public class CategorySecond {
     private int count;
     private int categoryFirstId;
 
+    public CategorySecond(int id, String name, int count, int categoryFirstId) {
+        this.id = id;
+        this.name = name;
+        this.count = count;
+        this.categoryFirstId = categoryFirstId;
+    }
+
     public int getId() {
         return id;
     }
