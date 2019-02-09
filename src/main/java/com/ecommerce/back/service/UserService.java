@@ -61,4 +61,15 @@ public class UserService {
             return attemptUser.equals(user) ? "success" : "password not correct";
         }
     }
+
+    public String modifyPassword(String userName, String password) {
+        User user = userDAO.getUserByUserName(userName);
+        if (user == null)
+            return "no user with this user name";
+        else {
+            User userWithNewPwd = new User(userName, password, user.getImgUrl(), user.getSalt());
+            UserUtil.passwordEncode(userWithNewPwd);
+            return (userDAO.updateUserPassword(userWithNewPwd) != 0) ? "success" : "update fail";
+        }
+    }
 }

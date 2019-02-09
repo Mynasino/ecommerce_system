@@ -30,6 +30,6 @@ public interface UserDAO {
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
     void deleteUserById(int id);
 
-    //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
-    //void updateLoginTicketStatus(String ticket);
+    @Update(value = {"UPDATE ", TABLE_NAME, " SET password = #{password} WHERE user_name = #{userName}"})
+    int updateUserPassword(User user);
 }

@@ -19,7 +19,7 @@ public @interface AuthenticationRequired {
     AuthenticationLevel[] levels() default {AuthenticationLevel.USER};
     /**
      * if specific individual is required for resource
-     * true then request with RequestParam "PersonName" must be the same with "Name" in jwt carried in RequestHeader
+     * true then request with RequestParam JWTUtil.SPECIFIC_PARAM_NAME must be the same with "Name" in jwt carried in RequestHeader
      */
     boolean[] specifics() default {false};
 }
