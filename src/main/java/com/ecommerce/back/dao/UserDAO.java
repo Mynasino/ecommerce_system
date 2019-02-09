@@ -16,6 +16,7 @@ public interface UserDAO {
     String SELECT_FIELDS = "id,user_name,password,img_url,salt";
     String INSERT_FIELDS_DB = "user_name,password,img_url,salt";
     String INSERT_FIELDS = "#{userName},#{password},#{imgUrl},#{salt}";
+    String UPDATE_FIELDS = "user_name = #{userName}, password = #{password}, img_url = #{imgUrl}, salt = #{salt}";
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     User getUserById(int id);
@@ -27,9 +28,12 @@ public interface UserDAO {
             "VALUES(", INSERT_FIELDS, ")"})
     void addUser(User user);
 
-    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    void deleteUserById(int id);
+    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
+    int deleteUserByUserName(String userName);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET password = #{password} WHERE user_name = #{userName}"})
     int updateUserPassword(User user);
+
+    @Update(value = {"UPDATE ", TABLE_NAME, " SET ",UPDATE_FIELDS," WHERE id = #{id}"})
+    int updateUser(User user);
 }

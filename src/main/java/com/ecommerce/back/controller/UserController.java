@@ -3,12 +3,15 @@ package com.ecommerce.back.controller;
 import com.ecommerce.back.jsonInfo.ErrorInfo;
 import com.ecommerce.back.jsonInfo.OnlineUsersInfo;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
+import com.ecommerce.back.jsonInfo.UserInfo;
+import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.ResponseUtil;
+import com.sun.deploy.net.HttpResponse;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -18,7 +21,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.util.Set;
 
-import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @RestController //@Controller + @ResponseBody + return entity
@@ -35,9 +37,7 @@ public class UserController {
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE}, produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public String register(@RequestBody RegisterInfo registerInfo, HttpServletResponse response) {
         String info = userService.registerUser(registerInfo);
-        return info.equals("success") ?
-                ResponseUtil.JSONResponse(SC_OK, "", response) :
-                ResponseUtil.JSONResponse(SC_BAD_REQUEST, new ErrorInfo(info), response);
+        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
     }
 
     @ApiOperation(value = "modify password")
@@ -48,15 +48,6 @@ public class UserController {
                                  @RequestParam("newPassword") String newPassword,
                                  HttpServletResponse response) {
         String info = userService.modifyPassword(individualName, newPassword);
-        return info.equals("success") ?
-                ResponseUtil.JSONResponse(SC_OK, "", response) :
-                ResponseUtil.JSONResponse(SC_BAD_REQUEST, new ErrorInfo(info), response);
-    }
-
-    @ApiOperation(value = "Get Online Users")
-    @GetMapping(produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public String getOnlineStatistic(HttpServletResponse response) {
-        Set<String> keySet = Statistic.onlineUsers.keySet();
-        return ResponseUtil.JSONResponse(SC_OK, new OnlineUsersInfo(keySet.size(), keySet), response);
+        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
     }
 }

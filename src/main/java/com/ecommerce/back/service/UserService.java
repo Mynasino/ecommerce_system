@@ -72,4 +72,35 @@ public class UserService {
             return (userDAO.updateUserPassword(userWithNewPwd) != 0) ? "success" : "update fail";
         }
     }
+
+    public String updateUser(RegisterInfo registerInfo, int userId) {
+        String userName = registerInfo.getUserName();
+        String password = registerInfo.getPassword();
+
+        byte[] base64ImgBytes = registerInfo.getImgBase64String().getBytes(StandardCharsets.UTF_8);
+        try {
+            String newImgUrl = ImgUtil.Base64BytesToLocalImg(base64ImgBytes, registerInfo.getImgType());
+            User user = new User(userName, password, newImgUrl, UUID.randomUUID().toString().substring(0,5));
+            user.setId(userId);
+            UserUtil.passwordEncode(user);
+            return (userDAO.updateUser(user)) > 0 ? "success" : "update user " + user.getUserName() + " failed";
+        }  catch (IllegalStateException e) {
+            e.printStackTrace();
+            return "imgType not support";
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "server IOException";
+        }
+    }
+
+    public String deleteUser(String userName) {
+        User user = userDAO.getUserByUserName(userName);
+        return user == null ? "no user with this user name" : (
+                    (userDAO.deleteUserByUserName(userName) != 0) ? "success" : "delete fail"
+                );
+    }
+
+    public User getUserByUserName(String userName) {
+        return userDAO.getUserByUserName(userName);
+    }
 }
