@@ -2,12 +2,10 @@ package com.ecommerce.back.dao;
 
 import com.ecommerce.back.model.Product;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 @Mapper
@@ -23,6 +21,13 @@ public interface ProductDAO {
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE name = #{name}"})
     Product getProductByName(String name);
+
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME,
+            " WHERE category_second_id = #{categorySecondId}",
+            " LIMIT #{limit} OFFSET #{offset}"})
+    List<Product> getProductsByCIdLimitOffset(@Param("categorySecondId") int categorySecondId,
+                                              @Param("limit") int limit,
+                                              @Param("offset") int offset);
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})

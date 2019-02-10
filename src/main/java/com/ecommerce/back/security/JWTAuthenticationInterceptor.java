@@ -3,6 +3,7 @@ package com.ecommerce.back.security;
 import com.alibaba.fastjson.JSONObject;
 import com.ecommerce.back.util.IOUtil;
 import com.ecommerce.back.security.util.JWTUtil;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -41,8 +42,15 @@ public class JWTAuthenticationInterceptor implements HandlerInterceptor {
             //no jwt
             if (jwtString == null)
                 return SendErrorMessage(SC_UNAUTHORIZED, "login first", response);
-            //TODO catch Exception and auth userName
-            PersonDetail personDetail = JWTUtil.getPersonDetailByJWTString(jwtString);
+            //try parse JWT
+            PersonDetail personDetail;
+            try {
+                personDetail = JWTUtil.getPersonDetailByJWTString(jwtString);
+            } catch (ExpiredJwtException e) {
+                return SendErrorMessage(SC_UNAUTHORIZED, "JWT Expired, please relogin", response);
+            } catch (Exception e) {
+                return SendErrorMessage(SC_UNAUTHORIZED, "JWT illegal", response);
+            }
             //jwt parse fail
             if (personDetail == null)
                 return SendErrorMessage(SC_BAD_REQUEST, "fail parsing jwt in authentication", response);

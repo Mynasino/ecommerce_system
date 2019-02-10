@@ -1,5 +1,8 @@
 package com.ecommerce.back.controller;
 
+import com.ecommerce.back.model.CategoryFirst;
+import com.ecommerce.back.model.CategorySecond;
+import com.ecommerce.back.model.Product;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
@@ -11,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 @RestController
 @RequestMapping(value = "/category", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})
@@ -20,6 +24,23 @@ public class CategoryController {
     @Autowired
     public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
+    }
+
+    @GetMapping("/")
+    public List<CategoryFirst> getAllCategoryFirsts() {
+        return categoryService.getAllCategoryFirsts();
+    }
+
+    @GetMapping("/first")
+    public List<CategorySecond> getCategorySecondsOfSpecificCategoryFirst(@RequestParam("categoryFirstId") int categoryFirstId) {
+        return categoryService.getCategorySecondsByCategoryFirstId(categoryFirstId);
+    }
+
+    @GetMapping("/second")
+    public List<Product> getProductsOfSpecificCategorySecond(@RequestParam("categorySecondId") int categorySecondId,
+                                                             @RequestParam("limit") int limit,
+                                                             @RequestParam("offset") int offset) {
+        return categoryService.getProductsByCIdLimitOffset(categorySecondId, limit, offset);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
