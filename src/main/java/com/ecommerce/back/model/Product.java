@@ -1,5 +1,6 @@
 package com.ecommerce.back.model;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 public class Product {
@@ -9,10 +10,10 @@ public class Product {
     private int price;
     private int stock;
     private int saleCount;
-    private String imgUrls;
+    private String[] imgUrls;
     private int categorySecondId;
 
-    public Product(int id, String name, String subTitle, int price, int stock, int saleCount, String imgUrls, int categorySecondId) {
+    public Product(int id, String name, String subTitle, int price, int stock, int saleCount, String[] imgUrls, int categorySecondId) {
         this.id = id;
         this.name = name;
         this.subTitle = subTitle;
@@ -71,11 +72,11 @@ public class Product {
         this.saleCount = saleCount;
     }
 
-    public String getImgUrls() {
+    public String[] getImgUrls() {
         return imgUrls;
     }
 
-    public void setImgUrls(String imgUrls) {
+    public void setImgUrls(String[] imgUrls) {
         this.imgUrls = imgUrls;
     }
 
@@ -97,7 +98,7 @@ public class Product {
                 saleCount == product.saleCount &&
                 Objects.equals(name, product.name) &&
                 Objects.equals(subTitle, product.subTitle) &&
-                Objects.equals(imgUrls, product.imgUrls);
+                Arrays.equals(imgUrls, product.imgUrls);
     }
 
     @Override

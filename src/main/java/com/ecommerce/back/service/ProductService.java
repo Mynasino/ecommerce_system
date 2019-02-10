@@ -42,7 +42,7 @@ public class ProductService {
 
         String[] imgUrls = ImgUtil.MultiBase64BytesToLocalImg(imgBase64Strings, imgTypes);
         Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
-                newProductInfo.getStock(), newProductInfo.getSaleCount(), JSON.toJSONString(imgUrls), categorySecond.getId());
+                newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
         //add new Product and add new categorySecond's and categoryFirst's product count
         //Unified throw exceptions
@@ -78,7 +78,7 @@ public class ProductService {
         String[] imgTypes = newProductInfo.getImgTypes();
         String[] imgUrls = ImgUtil.MultiBase64BytesToLocalImg(imgBase64Strings, imgTypes);
         Product newProduct = new Product(productId, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
-                newProductInfo.getStock(), newProductInfo.getSaleCount(), JSON.toJSONString(imgUrls), categorySecond.getId());
+                newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
         //if origin CategorySecond exist, reduce
         if (originCategorySecond != null) {

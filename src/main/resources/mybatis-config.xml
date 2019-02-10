@@ -18,7 +18,9 @@
     <!--类型命名-->
     <!--<typeAliases></typeAliases>-->
     <!--类型处理器-->
-    <!--<typeHandlers></typeHandlers>-->
+    <typeHandlers>
+        <typeHandler handler="com.ecommerce.back.typeHandlers.StringArrayTypeHandler"/>
+    </typeHandlers>
     <!--对象工厂-->
     <!--<objectFactory type=""/>-->
     <!--插件-->
