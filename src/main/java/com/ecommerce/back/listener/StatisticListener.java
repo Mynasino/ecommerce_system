@@ -1,6 +1,9 @@
 package com.ecommerce.back.listener;
 
+import com.ecommerce.back.dao.UserDAO;
 import com.ecommerce.back.statistic.Statistic;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
@@ -8,13 +11,16 @@ import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
 
 @WebListener
+@Component
 public class StatisticListener implements ServletContextListener {
     private final UpdateOnlineUserRunnable updateOnlineUserRunnable = new UpdateOnlineUserRunnable();
 
     @Override
     public void contextInitialized(ServletContextEvent sce) {
+        //start monitor online user -> "/login"
         new Thread(updateOnlineUserRunnable).start();
     }
 

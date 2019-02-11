@@ -58,46 +58,47 @@ public class OrderService {
             return null;
         }
 
-        Integer shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+        int userId = user.getId();
         //Dual lock guarantees no repeat of creating a shopping cart
-        //use a HashMap maintained by LoginController and StatisticListener
-        if (shoppingCartId == null) {
-            Date JWTExpiredDate = Statistic.onlineUsers.get(user.getUserName());
-            if (JWTExpiredDate == null) throw new IllegalStateException("JWT expired, please relogin"); //JWT has expired
-            synchronized (JWTExpiredDate) { //otherwise lock JWTExpiredDate
-                shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
-                if (shoppingCartId == null) {
-                    Order newShoppingCart = new Order();
-                    newShoppingCart.setUserId(user.getId());
-                    newShoppingCart.setCreateTime(new Date());
-                    newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
+        Integer shoppingCartId;
+        if ((shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId())) == null) {
+            Statistic.userLocks[userId].lock();
+            if (orderDAO.getShoppingCartOrderIdByUserId(user.getId()) == null) {
+                Order newShoppingCart = new Order();
+                newShoppingCart.setUserId(user.getId());
+                newShoppingCart.setCreateTime(new Date());
+                newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
 
-                    shoppingCartId = orderDAO.addOrder(newShoppingCart);
-                }
+                shoppingCartId = orderDAO.addOrder(newShoppingCart);
             }
+            Statistic.userLocks[userId].unlock();
         }
-
         return shoppingCartId;
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public String addOrderItemToShoppingCart(String userName, int shoppingCartId, int productId, int count) {
         if (count <= 0) return "count must be > 0";
-        String info = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        if (!info.equals("success")) return info;
+        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
 
         //not allow repeatable add of same orderItem to same shoppingCart
-        if (orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId) != null)
-            return "orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " already exist";
-        orderItemDAO.addOrderItem(new OrderItem(-1, shoppingCartId, productId, count));
+        if (orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId) == null) {
+            Statistic.userLocks[userId].lock();
+            if (orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId) == null) {
+                orderItemDAO.addOrderItem(new OrderItem(-1, shoppingCartId, productId, count));
+            } else
+                throw new IllegalStateException("orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " already exist");
+            Statistic.userLocks[userId].unlock();
+        } else
+            throw new IllegalStateException("orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " already exist");
+
         return "success";
     }
 
     @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
     public String modifyOrderItemCount(String userName, int shoppingCartId, int productId, int count) {
         if (count <= 0) return "count must be > 0";
-        String info = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        if (!info.equals("success")) return info;
+        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
 
         OrderItem originOrderItem = orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId);
         if (originOrderItem == null) return "orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " not exist";
@@ -105,35 +106,35 @@ public class OrderService {
     }
 
     public String deleteOrderItemInShoppingCart(String userName, int shoppingCartId, int productId) {
-        String info = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        if (!info.equals("success")) return info;
+        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
 
         orderItemDAO.deleteOrderItemByShoppingCartIdAndProductId(shoppingCartId, productId);
         return "success";
     }
 
     public String submitShoppingCart(String userName, int shoppingCartId, String address, String mobile) {
-        String info = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        if (!info.equals("success")) return info;
+        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
 
         orderDAO.updateStatusToPendingPayment(shoppingCartId, address, mobile);
         return "success";
     }
 
-    private String validationOfUserToShoppingCartId(String userName, int orderId) {
+    private int validationOfUserToShoppingCartId(String userName, int orderId) {
         Order shoppingCart = orderDAO.getOrderById(orderId);
-        if (shoppingCart == null) return "ShoppingCart id " + orderId + " not exist";
-        if (shoppingCart.getStatusCode() != OrderStatus.SHOPPING_CART) return "offered id is not shoppingCart id";
-        User user = userDAO.getUserById(shoppingCart.getUserId());
-        if (user == null) return "User id " + shoppingCart.getUserId() + " not exist";
-        if (!user.getUserName().equals(userName)) return "user " + userName + " try modify " + "orderItem to " + user.getUserName() + "'s shoppingCart";
+        if (shoppingCart == null) throw new IllegalStateException("ShoppingCart id " + orderId + " not exist");
+        if (shoppingCart.getStatusCode() != OrderStatus.SHOPPING_CART) throw new IllegalStateException("offered id is not shoppingCart id");
 
-        return "success";
+        User user = userDAO.getUserById(shoppingCart.getUserId());
+        if (user == null) throw new IllegalStateException("User id " + shoppingCart.getUserId() + " not exist");
+        if (!user.getUserName().equals(userName)) throw new IllegalStateException("user " + userName + " try modify " + "orderItem to " + user.getUserName() + "'s shoppingCart");
+
+        return user.getId();
     }
 
     private String validationOfUserToOrderId(String userName, int orderId) {
         Order shoppingCart = orderDAO.getOrderById(orderId);
         if (shoppingCart == null) return "Order id " + orderId + " not exist";
+
         User user = userDAO.getUserById(shoppingCart.getUserId());
         if (user == null) return "User id " + shoppingCart.getUserId() + " not exist";
         if (!user.getUserName().equals(userName)) return "user " + userName + " try visit " + "orderItem to " + user.getUserName() + "'s order";

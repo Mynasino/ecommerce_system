@@ -1,18 +1,12 @@
 package com.ecommerce.back.controller;
 
-import com.ecommerce.back.jsonInfo.ErrorInfo;
-import com.ecommerce.back.jsonInfo.OnlineUsersInfo;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
-import com.ecommerce.back.jsonInfo.UserInfo;
 import com.ecommerce.back.model.Product;
-import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.UserService;
-import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.ResponseUtil;
-import com.sun.deploy.net.HttpResponse;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -21,9 +15,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 
 import java.util.List;
-import java.util.Set;
-
-import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 @RestController //@Controller + @ResponseBody + return entity
 @RequestMapping(value = "/user", produces = {MediaType.APPLICATION_JSON_UTF8_VALUE})

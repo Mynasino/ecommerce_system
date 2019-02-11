@@ -9,6 +9,8 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Mapper
 public interface UserDAO {
@@ -20,6 +22,9 @@ public interface UserDAO {
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     User getUserById(int id);
+
+    @Select(value = {"SELECT id FROM ", TABLE_NAME})
+    List<Integer> getUserIds();
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
     User getUserByUserName(String userName);

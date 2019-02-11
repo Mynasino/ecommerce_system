@@ -9,16 +9,24 @@ import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @Mapper
 public interface OrderCommentDAO {
     String TABLE_NAME = "order_comment";
-    String SELECT_FIELDS = "id,content,img_urls,score_logistics,score_quality,score_service";
-    String INSERT_FIELDS_DB = "content,img_urls,score_logistics,score_quality,score_service";
-    String INSERT_FIELDS = "#{content},#{imgUrls},#{scoreLogistics},#{scoreQuality},#{scoreService}";
+    String SELECT_FIELDS = "id,content,img_urls,score_logistics,score_quality,score_service,order_id";
+    String INSERT_FIELDS_DB = "content,img_urls,score_logistics,score_quality,score_service,order_id";
+    String INSERT_FIELDS = "#{content},#{imgUrls},#{scoreLogistics},#{scoreQuality},#{scoreService},#{orderId}";
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     OrderComment getOrderCommentById(int id);
+
+    @Select(value = {"SELECT id FROM ", TABLE_NAME, " WHERE order_id = #{orderId}"})
+    Integer getOrderCommentIdByOrderId(int orderId);
+
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE order_id = #{orderId}"})
+    OrderComment getOrderCommentByOrderId(int orderId);
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})

@@ -1,6 +1,7 @@
 package com.ecommerce.back.controller;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.ecommerce.back.model.Order;
 import com.ecommerce.back.model.OrderItem;
 import com.ecommerce.back.security.AuthenticationLevel;
@@ -44,10 +45,16 @@ public class OrderController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/shoppingCart")
-    public String getShoppingCart(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName, HttpServletResponse response) {
+    public String getShoppingCartId(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName, HttpServletResponse response) {
         try {
             Integer shoppingCartId = orderService.getOrCreateShoppingCartIdByUserName(individualName);
-            return shoppingCartId == null ? null : JSON.toJSONString(orderService.getOrderItemsByOrderId(individualName, shoppingCartId));
+            if (shoppingCartId == null)
+                throw new IllegalStateException("create shoppingCart for " + individualName + " failed");
+            else {
+                JSONObject jsonObject = new JSONObject();
+                jsonObject.put("shoppingCartId", shoppingCartId);
+                return jsonObject.toJSONString();
+            }
         } catch (IllegalStateException e) {
             return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(e.getMessage(), response);
         }
