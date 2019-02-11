@@ -2,12 +2,10 @@ package com.ecommerce.back.dao;
 
 import com.ecommerce.back.model.ProductCollection;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 @Mapper
@@ -17,16 +15,16 @@ public interface ProductCollectionDAO {
     String INSERT_FIELDS_DB = "user_id,product_id";
     String INSERT_FIELDS = "#{userId},#{productId}";
 
-    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    ProductCollection getProductCollectionById(int id);
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_id = #{userId} AND product_id = #{productId}"})
+    ProductCollection getProductCollectionByUserIdAndProductId(@Param("userId") int userId, @Param("productId") int productId);
+
+    @Select(value = {"SELECT product_id FROM ", TABLE_NAME, " WHERE user_id = #{userId}"})
+    List<Integer> getProductIdsByUserId(int userId);
+
+    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE user_id = #{userId} AND product_id = #{productId}"})
+    void deleteProductCollectionByUserIdAndProductId(@Param("userId") int userId, @Param("productId") int productId);
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
     void addProductCollection(ProductCollection productCollection);
-
-    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    void deleteProductCollectionById(int id);
-
-    //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
-    //void updateLoginTicketStatus(String ticket);
 }

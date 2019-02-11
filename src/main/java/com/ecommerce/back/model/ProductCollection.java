@@ -7,6 +7,12 @@ public class ProductCollection {
     private int userId;
     private int productId;
 
+    public ProductCollection(int id, int userId, int productId) {
+        this.id = id;
+        this.userId = userId;
+        this.productId = productId;
+    }
+
     public int getId() {
         return id;
     }

@@ -1,27 +1,36 @@
 package com.ecommerce.back.service;
 
+import com.ecommerce.back.dao.ProductCollectionDAO;
+import com.ecommerce.back.dao.ProductDAO;
 import com.ecommerce.back.dao.UserDAO;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
+import com.ecommerce.back.model.Product;
+import com.ecommerce.back.model.ProductCollection;
 import com.ecommerce.back.model.User;
 import com.ecommerce.back.util.ImgUtil;
 import com.ecommerce.back.util.UserUtil;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class UserService {
     private UserDAO userDAO;
+    private ProductCollectionDAO productCollectionDAO;
+    private ProductDAO productDAO;
 
     @Autowired
-    public UserService(UserDAO userDAO) {
+    public UserService(UserDAO userDAO, ProductCollectionDAO productCollectionDAO, ProductDAO productDAO) {
         this.userDAO = userDAO;
+        this.productCollectionDAO = productCollectionDAO;
+        this.productDAO = productDAO;
     }
 
     public String registerUser(RegisterInfo registerInfo) {
@@ -94,5 +103,39 @@ public class UserService {
 
     public User getUserByUserName(String userName) {
         return userDAO.getUserByUserName(userName);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
+    public String collectProduct(String userName, int productId) {
+        User user = userDAO.getUserByUserName(userName);
+        if (user == null) throw new IllegalStateException("user name: " + userName + " not exist");
+
+        ProductCollection productCollection = productCollectionDAO.getProductCollectionByUserIdAndProductId(user.getId(), productId);
+        if (productCollection != null) throw new IllegalStateException("Repeatable collect not allow");
+
+        productCollectionDAO.addProductCollection(new ProductCollection(-1, user.getId(), productId));
+        return "success";
+    }
+
+    public String cancelCollectProduct(String userName, int productId) {
+        User user = userDAO.getUserByUserName(userName);
+        if (user == null) throw new IllegalStateException("user name: " + userName + " not exist");
+
+        productCollectionDAO.deleteProductCollectionByUserIdAndProductId(user.getId(), productId);
+        return "success";
+    }
+
+    public List<Product> getProductCollectionByUserName(String userName) {
+        User user = userDAO.getUserByUserName(userName);
+        if (user == null) throw new IllegalStateException("user name: " + userName + " not exist");
+
+        List<Integer> productIds = productCollectionDAO.getProductIdsByUserId(user.getId());
+        List<Product> products = new ArrayList<>();
+        for (int productId : productIds) {
+            Product product = productDAO.getProductById(productId);
+            if (product != null) products.add(product);
+        }
+
+        return products;
     }
 }
