@@ -2,12 +2,10 @@ package com.ecommerce.back.dao;
 
 import com.ecommerce.back.model.OrderItem;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 @Mapper
@@ -20,13 +18,19 @@ public interface OrderItemDAO {
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     OrderItem getOrderItemById(int id);
 
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE order_id = #{orderId} and product_id = #{productId}"})
+    OrderItem getOrderItemByOrderIdAndProductId(@Param("orderId") int orderId, @Param("productId") int productId);
+
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE order_id = #{orderId}"})
+    List<OrderItem> getOrderItemByOrderId(int orderId);
+
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
     void addOrderItem(OrderItem orderItem);
 
-    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    void deleteOrderItemById(int id);
+    @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE order_id = #{orderId} AND product_id = #{productId}"})
+    void deleteOrderItemByShoppingCartIdAndProductId(@Param("orderId") int shoppingCartId, @Param("productId") int productId);
 
-    //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
-    //void updateLoginTicketStatus(String ticket);
+    @Update(value = {"UPDATE ", TABLE_NAME, " SET count = #{count} WHERE id = #{id}"})
+    int updateOrderItemCountById(@Param("id") int id, @Param("count") int count);
 }

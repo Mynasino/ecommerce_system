@@ -6,14 +6,12 @@ import java.util.Objects;
 public class Order {
     private int id;
     private String address;
-    private String customerName;
     private String mobile;
     private Date createTime;
     private Date payTime;
     private Date deliveryTime;
     private int userId;
     private int statusCode;
-    private int categorySecondId;
 
     public int getId() {
         return id;
@@ -29,14 +27,6 @@ public class Order {
 
     public void setAddress(String address) {
         this.address = address;
-    }
-
-    public String getCustomerName() {
-        return customerName;
-    }
-
-    public void setCustomerName(String customerName) {
-        this.customerName = customerName;
     }
 
     public String getMobile() {
@@ -87,14 +77,6 @@ public class Order {
         this.statusCode = statusCode;
     }
 
-    public int getCategorySecondId() {
-        return categorySecondId;
-    }
-
-    public void setCategorySecondId(int categorySecondId) {
-        this.categorySecondId = categorySecondId;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -102,9 +84,7 @@ public class Order {
         Order order = (Order) o;
         return userId == order.userId &&
                 statusCode == order.statusCode &&
-                categorySecondId == order.categorySecondId &&
                 Objects.equals(address, order.address) &&
-                Objects.equals(customerName, order.customerName) &&
                 Objects.equals(mobile, order.mobile) &&
                 Objects.equals(createTime, order.createTime) &&
                 Objects.equals(payTime, order.payTime) &&
@@ -113,6 +93,6 @@ public class Order {
 
     @Override
     public int hashCode() {
-        return Objects.hash(address, customerName, mobile, createTime, payTime, deliveryTime, userId, statusCode, categorySecondId);
+        return Objects.hash(address, mobile, createTime, payTime, deliveryTime, userId, statusCode);
     }
 }

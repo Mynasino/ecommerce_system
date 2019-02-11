@@ -8,6 +8,13 @@ public class OrderItem {
     private int productId;
     private int count;
 
+    public OrderItem(int id, int orderId, int productId, int count) {
+        this.id = id;
+        this.orderId = orderId;
+        this.productId = productId;
+        this.count = count;
+    }
+
     public int getId() {
         return id;
     }
