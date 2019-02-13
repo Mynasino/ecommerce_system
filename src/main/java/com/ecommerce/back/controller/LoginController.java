@@ -2,23 +2,23 @@ package com.ecommerce.back.controller;
 
 import com.ecommerce.back.jsonInfo.ErrorInfo;
 import com.ecommerce.back.jsonInfo.JWTInfo;
+import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
+import com.ecommerce.back.security.PersonDetail;
 import com.ecommerce.back.service.AdminService;
 import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.statistic.Statistic;
+import com.ecommerce.back.util.MailUtil;
 import com.ecommerce.back.util.ResponseUtil;
-import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
+import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletResponse;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
 import java.util.Date;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;
@@ -29,6 +29,9 @@ import static javax.servlet.http.HttpServletResponse.SC_OK;
 public class LoginController {
     private UserService userService;
     private AdminService adminService;
+
+    @Value("${website.address}")
+    private String websiteAddress;
 
     @Autowired
     public LoginController(UserService userService, AdminService adminService) {
@@ -62,5 +65,33 @@ public class LoginController {
                 ResponseUtil.JSONResponse(SC_OK,
                         new JWTInfo(JWTUtil.HEADER_KEY, JWTUtil.getJWTString(adminName, AuthenticationLevel.ADMIN, new Date())), response) :
                 ResponseUtil.JSONResponse(SC_BAD_REQUEST, new ErrorInfo(info), response);
+    }
+
+    @PatchMapping("/user/retrieve")
+    public void sendPasswordResetMail(@RequestParam("userName") String individualName,
+                                 @RequestParam("newPassword") String newPassword) {
+        User user = userService.getUserByUserName(individualName);
+        if (user == null) throw new IllegalStateException("user not exist");
+        String jwtString = JWTUtil.getJWTString(individualName, AuthenticationLevel.USER, new Date());
+        try {
+            MailUtil.sendMailMessage(user.getMail(), "Reset your password in " + websiteAddress,
+                    "http://" + websiteAddress + "/login/user/retrieve" + "/" + jwtString + "/" + newPassword);
+        } catch (MessagingException e) {
+            throw new IllegalStateException("Mail send failed");
+        }
+    }
+
+    @GetMapping("/user/retrieve/{jwtString}/{newPassword}")
+    public String retrieveURLVisit(@PathVariable("jwtString") String jwtString,
+                                      @PathVariable("newPassword") String newPassword) {
+        try {
+            PersonDetail personDetail = JWTUtil.getPersonDetailByJWTString(jwtString);
+            userService.modifyPassword(personDetail.getName(), newPassword);
+            return "modify password success";
+        } catch (ExpiredJwtException e) {
+            return "JWT Expired, please relogin";
+        } catch (Exception e) {
+            return "JWT illegal";
+        }
     }
 }

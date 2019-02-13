@@ -133,6 +133,6 @@ public class getDao {
         List<String> fieldNames = new ArrayList<>();
         for (Field field : User.class.getDeclaredFields())
             fieldNames.add(field.getName());
-        Assert.assertEquals(5, fieldNames.size());
+        Assert.assertEquals(6, fieldNames.size());
     }
 }

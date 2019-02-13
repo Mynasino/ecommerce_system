@@ -2,6 +2,7 @@ package com.ecommerce.back.controller;
 
 import com.ecommerce.back.jsonInfo.RegisterInfo;
 import com.ecommerce.back.model.Product;
+import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
@@ -44,6 +45,16 @@ public class UserController {
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
+    @GetMapping
+    public User queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) {
+        User user = userService.getUserByUserName(individualName);
+        if (user == null) throw new IllegalStateException("user not exist");
+        user.setSalt("not visitable");
+        return user;
+    }
+
+    @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
+    @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/productCollect")
     public String collectProduct(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
                                  @RequestParam("productId") int productId,
@@ -51,6 +62,8 @@ public class UserController {
         String info = userService.collectProduct(individualName, productId);
         return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
     }
+
+
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
