@@ -15,10 +15,10 @@ import java.util.List;
 @Mapper
 public interface UserDAO {
     String TABLE_NAME = "user";
-    String SELECT_FIELDS = "id,user_name,password,img_url,salt";
-    String INSERT_FIELDS_DB = "user_name,password,img_url,salt";
-    String INSERT_FIELDS = "#{userName},#{password},#{imgUrl},#{salt}";
-    String UPDATE_FIELDS = "user_name = #{userName}, password = #{password}, img_url = #{imgUrl}, salt = #{salt}";
+    String SELECT_FIELDS = "id,user_name,password,img_url,salt,mail";
+    String INSERT_FIELDS_DB = "user_name,password,img_url,salt,mail";
+    String INSERT_FIELDS = "#{userName},#{password},#{imgUrl},#{salt},#{mail}";
+    String UPDATE_FIELDS = "user_name = #{userName}, password = #{password}, img_url = #{imgUrl}, salt = #{salt}, mail = #{mail}";
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     User getUserById(int id);

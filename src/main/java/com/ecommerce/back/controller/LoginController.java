@@ -8,6 +8,7 @@ import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.ResponseUtil;
+import com.sun.xml.internal.messaging.saaj.util.ByteInputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
 import java.util.Date;
 
 import static javax.servlet.http.HttpServletResponse.SC_BAD_REQUEST;

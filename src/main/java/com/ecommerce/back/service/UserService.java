@@ -46,7 +46,7 @@ public class UserService {
         try {
             String newImgUrl = ImgUtil.Base64BytesToLocalImg(base64ImgBytes, registerInfo.getImgType());
             //encode and add user
-            User user = new User(userName, password, newImgUrl, UUID.randomUUID().toString().substring(0,5));
+            User user = new User(userName, password, newImgUrl, UUID.randomUUID().toString().substring(0,5), registerInfo.getMail());
             UserUtil.passwordEncode(user);
             userDAO.addUser(user);
 
@@ -61,7 +61,7 @@ public class UserService {
         if (user == null)
             return "no user with this user name";
         else {
-            User attemptUser = new User(userName, password, user.getImgUrl(), user.getSalt());
+            User attemptUser = new User(userName, password, user.getImgUrl(), user.getSalt(), user.getMail());
             UserUtil.passwordEncode(attemptUser);
             return attemptUser.equals(user) ? "success" : "password not correct";
         }
@@ -72,7 +72,7 @@ public class UserService {
         if (user == null)
             return "no user with this user name";
         else {
-            User userWithNewPwd = new User(userName, password, user.getImgUrl(), user.getSalt());
+            User userWithNewPwd = new User(userName, password, user.getImgUrl(), user.getSalt(), user.getMail());
             UserUtil.passwordEncode(userWithNewPwd);
             return (userDAO.updateUserPassword(userWithNewPwd) != 0) ? "success" : "update fail";
         }
@@ -85,7 +85,7 @@ public class UserService {
         byte[] base64ImgBytes = registerInfo.getImgBase64String().getBytes(StandardCharsets.UTF_8);
         try {
             String newImgUrl = ImgUtil.Base64BytesToLocalImg(base64ImgBytes, registerInfo.getImgType());
-            User user = new User(userName, password, newImgUrl, UUID.randomUUID().toString().substring(0,5));
+            User user = new User(userName, password, newImgUrl, UUID.randomUUID().toString().substring(0,5), registerInfo.getMail());
             user.setId(userId);
             UserUtil.passwordEncode(user);
             return (userDAO.updateUser(user)) > 0 ? "success" : "update user " + user.getUserName() + " failed";

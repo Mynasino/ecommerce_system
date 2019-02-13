@@ -13,6 +13,7 @@ public class RegisterInfo {
     private String imgBase64String;
     @ApiModelProperty(value="type of img, support png/jpg", example = "png")
     private String imgType;
+    private String mail;
 
     public String getUserName() {
         return userName;
@@ -44,5 +45,13 @@ public class RegisterInfo {
 
     public void setImgType(String imgType) {
         this.imgType = imgType;
+    }
+
+    public String getMail() {
+        return mail;
+    }
+
+    public void setMail(String mail) {
+        this.mail = mail;
     }
 }

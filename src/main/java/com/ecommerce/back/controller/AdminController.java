@@ -2,7 +2,6 @@ package com.ecommerce.back.controller;
 
 import com.ecommerce.back.jsonInfo.OnlineUsersInfo;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
-import com.ecommerce.back.jsonInfo.UserInfo;
 import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
@@ -42,12 +41,9 @@ public class AdminController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER, AuthenticationLevel.ADMIN}, specifics = {true, false})
     @GetMapping(value = "/user")
-    public String queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
+    public User queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
                             HttpServletResponse response) {
-        User user = userService.getUserByUserName(individualName);
-        return (user == null) ?
-                ResponseUtil.SC_OKorSC_BAD_REQUESTResponse("no user with user name " + individualName, response) :
-                ResponseUtil.JSONResponse(SC_OK, new UserInfo(user.getId(), user.getImgUrl(), user.getUserName(), user.getPassword()), response);
+        return userService.getUserByUserName(individualName);
     }
 
     @ApiOperation(value = "modify password")
