@@ -27,7 +27,8 @@ public interface OrderDAO {
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    int addOrder(Order order);
+    @Options(useGeneratedKeys = true, keyColumn = "id", keyProperty = "id")
+    void addOrder(Order order);
 
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE id = #{id}"})
     void deleteOrderById(int id);

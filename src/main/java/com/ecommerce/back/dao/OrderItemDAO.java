@@ -29,5 +29,5 @@ public interface OrderItemDAO {
     void deleteOrderItemByShoppingCartIdAndProductId(@Param("orderId") int shoppingCartId, @Param("productId") int productId);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET count = #{count} WHERE order_id = #{orderId} AND product_id = #{productId}"})
-    int updateOrderItemCountByOrderItem(OrderItem orderItem);
+    void updateOrderItemCountByOrderItem(OrderItem orderItem);
 }

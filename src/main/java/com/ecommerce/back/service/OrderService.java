@@ -88,7 +88,10 @@ public class OrderService {
             newShoppingCart.setUserId(user.getId());
             newShoppingCart.setCreateTime(new Date());
             newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
-            shoppingCartId = orderDAO.addOrder(newShoppingCart);
+            //生成主键注入到newShoppingCart对象
+            orderDAO.addOrder(newShoppingCart);
+            //返回生成的主键
+            return newShoppingCart.getId();
         }
         reentrantLock.unlock();
 

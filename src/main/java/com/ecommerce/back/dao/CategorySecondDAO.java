@@ -30,16 +30,16 @@ public interface CategorySecondDAO {
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    int addCategorySecond(CategorySecond categorySecond);
+    void addCategorySecond(CategorySecond categorySecond);
 
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
-    int deleteCategorySecondByName(String name);
+    void deleteCategorySecondByName(String name);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET count = count + 1 WHERE id = #{id}"})
-    int addProductCount(int id);
+    void addProductCount(int id);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET count = count - 1 WHERE id = #{id}"})
-    int reduceProductCount(int id);
+    void reduceProductCount(int id);
 
     //@Update(value = {"UPDATE ", TABLE_NAME, " SET status = 0 WHERE ticket = #{ticket}"})
     //void updateLoginTicketStatus(String ticket);

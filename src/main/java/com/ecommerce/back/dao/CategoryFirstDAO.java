@@ -30,14 +30,14 @@ public interface CategoryFirstDAO {
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    int addCategoryFirst(CategoryFirst categoryFirst);
+    void addCategoryFirst(CategoryFirst categoryFirst);
 
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
-    int deleteCategoryFirstByName(String name);
+    void deleteCategoryFirstByName(String name);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET count = count + 1 WHERE id = #{id}"})
-    int addProductCount(int id);
+    void addProductCount(int id);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET count = count - 1 WHERE id = #{id}"})
-    int reduceProductCount(int id);
+    void reduceProductCount(int id);
 }
