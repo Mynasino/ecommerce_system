@@ -1,21 +1,22 @@
 package com.ecommerce.back.listener;
 
-import com.ecommerce.back.dao.UserDAO;
 import com.ecommerce.back.statistic.Statistic;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 import javax.servlet.annotation.WebListener;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * 用于在ServletContext初始化时启动一个监听线程
+ * 每隔UPDATE_INTERVAL_MILLIS毫秒则遍历Statistic.onlineUsers
+ * 将其中记录的Token过期时间已到的用户名移除
+ */
 @WebListener
 @Component
-public class StatisticListener implements ServletContextListener {
+public class OnlineUserListener implements ServletContextListener {
     private final UpdateOnlineUserRunnable updateOnlineUserRunnable = new UpdateOnlineUserRunnable();
 
     @Override

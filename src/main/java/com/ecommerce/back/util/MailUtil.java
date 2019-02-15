@@ -14,10 +14,17 @@ import java.util.Properties;
 public class MailUtil {
     private static final Logger logger = LoggerFactory.getLogger(MailUtil.class);
 
+    /**
+     * QQ邮箱名
+     */
     private static final String QQMAIL_Name = "1696781072@qq.com";
+    /**
+     * 邮箱对应的SMTP的授权码
+     */
     private static final String QQMAIL_PASSWORD = "rhauhvgpsxfxeaha";
 
     private static final Session session;
+    //初始化邮件会话
     static {
         Properties properties = new Properties();
         properties.setProperty("mail.host", "smtp.qq.com");
@@ -44,6 +51,13 @@ public class MailUtil {
         session.setDebug(false);
     }
 
+    /**
+     * 发送邮件信息
+     * @param toMailAddress 要发送的邮箱地址
+     * @param subject 邮件标题
+     * @param content 邮件内容
+     * @throws MessagingException 邮件发送失败
+     */
     public static void sendMailMessage(String toMailAddress, String subject, String content) throws MessagingException {
         MimeMessage message = new MimeMessage(session);
         message.setFrom(QQMAIL_Name);
@@ -53,6 +67,11 @@ public class MailUtil {
         Transport.send(message);
     }
 
+    /**
+     * 检查邮箱地址格式
+     * @param mailAddress 邮箱地址
+     * @throws IllegalException 邮箱地址不合法
+     */
     public static void checkMailAddLegality(String mailAddress) throws IllegalException {
         if (!mailAddress.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+"))
             throw new IllegalException("邮箱地址",mailAddress,"不合法");

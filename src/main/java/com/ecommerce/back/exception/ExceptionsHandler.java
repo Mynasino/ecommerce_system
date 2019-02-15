@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletResponse;
 import java.sql.SQLIntegrityConstraintViolationException;
 
+/**
+ * 用于统一捕获请求过程的异常
+ * 并返回格式化的信息
+ */
 @ControllerAdvice
 public class ExceptionsHandler {
 

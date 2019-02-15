@@ -1,10 +1,8 @@
 package com.ecommerce.back.security;
 
-import com.alibaba.fastjson.JSONObject;
 import com.ecommerce.back.security.exception.JWTExpiredException;
 import com.ecommerce.back.security.exception.JWTIllegalException;
 import com.ecommerce.back.security.exception.LoginFirstException;
-import com.ecommerce.back.util.IOUtil;
 import com.ecommerce.back.security.util.JWTUtil;
 import io.jsonwebtoken.ExpiredJwtException;
 import org.springframework.stereotype.Component;
@@ -13,12 +11,9 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-
-import static javax.servlet.http.HttpServletResponse.*;
 
 @Component
 public class JWTAuthenticationInterceptor implements HandlerInterceptor {

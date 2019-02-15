@@ -8,11 +8,17 @@ import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 public class UserUtil {
+    /**
+     * 检查用户名合法性
+     */
     public static void checkUserNameLegality(String userName) throws IllegalException {
         if (userName == null || userName.equals("")) throw new IllegalException("用户名",userName,"用户名不能为空");
         if (userName.length() > 10) throw new IllegalException("用户名",userName,"用户名长度不能超过10个字符");
     }
 
+    /**
+     * 检查密码合法性
+     */
     public static void checkLegalPasswordLegality(String password) throws IllegalException {
         if (password == null || password.equals("")) throw new IllegalException("密码",password,"密码不能为空");
         if (password.length() > 10) throw new IllegalException("密码",password,"密码长度不能超过10个字符");

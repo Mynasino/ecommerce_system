@@ -11,6 +11,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+/**
+ * 用于将实体类的String数组映射为数据库的VARCHAR/TEXT类
+ * 具体实现为将String数组的JSON格式串存入数据库
+ */
 @MappedJdbcTypes(JdbcType.VARCHAR)
 public class StringArrayTypeHandler extends BaseTypeHandler<String[]> {
     @Override

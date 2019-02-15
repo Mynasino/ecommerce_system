@@ -4,6 +4,11 @@ import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.jsonInfo.NewProductInfo;
 
 public class ProductUtil {
+    /**
+     * 检查新增商品所需信息是否合法，若不合法则抛出异常
+     * @param newProductInfo 新增商品所需的信息
+     * @throws IllegalException 新增商品所需信息不合法
+     */
     public static void checkNewProductInfoLegality(NewProductInfo newProductInfo) throws IllegalException {
         if (newProductInfo.getName() == null || newProductInfo.getName().length() == 0)
             throw new IllegalException("商品名", newProductInfo.getName(), "不能为空");
