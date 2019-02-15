@@ -47,22 +47,19 @@ public class CommentService {
         int userId = validateOrderAuthority(userName, newOrderComment.getOrderId());
 
         //需要锁住UserName对应的锁，防止重复添加
-        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        reentrantLock.lock();
-
-        if (orderCommentDAO.getOrderCommentIdByOrderId(newOrderComment.getOrderId()) != null)
-            throw new IllegalException("OrderId的评论", newOrderComment.getOrderId() + "", "已存在");
-        //还未有相应评论，开始上传图片
-        String[] imgBase64Strings = newOrderComment.getImgBase64Strings();
-        String[] imgTypes = newOrderComment.getImgTypes();
-        String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
-        //对订单添加评论
-        orderCommentDAO.addOrderComment(new OrderComment(-1, newOrderComment.getContent(), imgUrls,
-                newOrderComment.getScoreLogistics(), newOrderComment.getScoreQuality(),
-                newOrderComment.getScoreService(), newOrderComment.getOrderId()));
-
-        reentrantLock.unlock();
+        Statistic.userNameLock.putIfAbsent(userName,new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            if (orderCommentDAO.getOrderCommentIdByOrderId(newOrderComment.getOrderId()) != null)
+                throw new IllegalException("OrderId的评论", newOrderComment.getOrderId() + "", "已存在");
+            //还未有相应评论，开始上传图片
+            String[] imgBase64Strings = newOrderComment.getImgBase64Strings();
+            String[] imgTypes = newOrderComment.getImgTypes();
+            String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
+            //对订单添加评论
+            orderCommentDAO.addOrderComment(new OrderComment(-1, newOrderComment.getContent(), imgUrls,
+                    newOrderComment.getScoreLogistics(), newOrderComment.getScoreQuality(),
+                    newOrderComment.getScoreService(), newOrderComment.getOrderId()));
+        }
         Statistic.userNameLock.remove(userName);
     }
 
@@ -81,21 +78,18 @@ public class CommentService {
         int productId = newProductComment.getProductId();
 
         //需要锁住对应UserName的ReentrantLock
-        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        reentrantLock.lock();
-
-        if (productCommentDAO.getProductCommentIdByOrderAndProductId(orderId, productId) != null)
-            throw new IllegalException("商品评论", orderId + " " + productId, "已存在");
-        //不存在该订单下的该商品的评论，开始上传图片
-        String[] imgBase64Strings = newProductComment.getImgBase64Strings();
-        String[] imgTypes = newProductComment.getImgTypes();
-        String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
-        //添加商品评论
-        productCommentDAO.addProductComment(new ProductComment(-1, productId, userId, newProductComment.getContent(),
-                imgUrls, newProductComment.getScore(), new Date(), orderId));
-
-        reentrantLock.unlock();
+        Statistic.userNameLock.putIfAbsent(userName, new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            if (productCommentDAO.getProductCommentIdByOrderAndProductId(orderId, productId) != null)
+                throw new IllegalException("商品评论", orderId + " " + productId, "已存在");
+            //不存在该订单下的该商品的评论，开始上传图片
+            String[] imgBase64Strings = newProductComment.getImgBase64Strings();
+            String[] imgTypes = newProductComment.getImgTypes();
+            String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
+            //添加商品评论
+            productCommentDAO.addProductComment(new ProductComment(-1, productId, userId, newProductComment.getContent(),
+                    imgUrls, newProductComment.getScore(), new Date(), orderId));
+        }
         Statistic.userNameLock.remove(userName);
     }
 

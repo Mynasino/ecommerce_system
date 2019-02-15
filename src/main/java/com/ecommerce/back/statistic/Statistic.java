@@ -7,6 +7,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class Statistic {
     public static final ConcurrentHashMap<String, Date> onlineUsers = new ConcurrentHashMap<>();
-    public static final ConcurrentHashMap<String, ReentrantLock> userNameLock = new ConcurrentHashMap<>();
-    public static final ConcurrentHashMap<String, ReentrantLock> productNameLock = new ConcurrentHashMap<>();
+        public static final ConcurrentHashMap<String, Object> userNameLock = new ConcurrentHashMap<>();
+    public static final ConcurrentHashMap<String, Object> productNameLock = new ConcurrentHashMap<>();
 }

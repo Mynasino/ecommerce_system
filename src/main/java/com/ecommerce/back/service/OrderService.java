@@ -77,24 +77,21 @@ public class OrderService {
         //如果存在购物车，直接返回
         if (shoppingCartId != null) return shoppingCartId;
         //如果不存在对应用户的购物车，需要锁住对应用户名的ReentrantLock，防止重复创建购物车
-        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-
-        reentrantLock.lock();
-        shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
-        //仍然不存在购物车，则需要创建购物车
-        if (shoppingCartId == null) {
-            Order newShoppingCart = new Order();
-            newShoppingCart.setUserId(user.getId());
-            newShoppingCart.setCreateTime(new Date());
-            newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
-            //生成主键注入到newShoppingCart对象
-            orderDAO.addOrder(newShoppingCart);
-            //返回生成的主键
-            return newShoppingCart.getId();
+        Statistic.userNameLock.putIfAbsent(userName, new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+            //仍然不存在购物车，则需要创建购物车
+            if (shoppingCartId == null) {
+                Order newShoppingCart = new Order();
+                newShoppingCart.setUserId(user.getId());
+                newShoppingCart.setCreateTime(new Date());
+                newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
+                //生成主键注入到newShoppingCart对象
+                orderDAO.addOrder(newShoppingCart);
+                //返回生成的主键
+                return newShoppingCart.getId();
+            }
         }
-        reentrantLock.unlock();
-
         Statistic.userNameLock.remove(userName);
 
         return shoppingCartId;
@@ -113,14 +110,11 @@ public class OrderService {
         if (count <= 0) throw new IllegalException("要购买的数量", count + "", "必须大于0");
 
         //需要对UserName加锁确保添加时给定的用户和购物车Id是合法的合法性
-        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        reentrantLock.lock();
-
-        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        orderItemDAO.addOrderItem(new OrderItem(shoppingCartId, productId, count));
-
-        reentrantLock.unlock();
+        Statistic.userNameLock.putIfAbsent(userName, new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
+            orderItemDAO.addOrderItem(new OrderItem(shoppingCartId, productId, count));
+        }
         Statistic.userNameLock.remove(userName);
     }
 
@@ -137,14 +131,11 @@ public class OrderService {
         if (count <= 0) throw new IllegalException("要购买的数量", count + "", "必须大于0");
 
         //需要对UserName加锁确保添加合法性
-        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        reentrantLock.lock();
-
-        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
-        orderItemDAO.updateOrderItemCountByOrderItem(new OrderItem(shoppingCartId, productId, count));
-
-        reentrantLock.unlock();
+        Statistic.userNameLock.putIfAbsent(userName, new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
+            orderItemDAO.updateOrderItemCountByOrderItem(new OrderItem(shoppingCartId, productId, count));
+        }
         Statistic.userNameLock.remove(userName);
     }
 

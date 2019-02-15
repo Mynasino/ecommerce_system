@@ -36,5 +36,6 @@ public interface OrderDAO {
     @Update(value = {"UPDATE ", TABLE_NAME, " SET status_code = " + OrderStatus.PENDING_PAYMENT +
             ", address = #{address}, mobile = #{mobile}",
             " WHERE id = #{id}"})
-    void updateStatusToPendingPayment(@Param("id") int id, @Param("address") String address, @Param("mobile") String mobile);
+    void updateStatusToPendingPayment(@Param("id") int id, @Param("address") String address,
+                                      @Param("mobile") String mobile);
 }

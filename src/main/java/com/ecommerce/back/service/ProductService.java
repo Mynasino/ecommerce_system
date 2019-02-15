@@ -55,15 +55,15 @@ public class ProductService {
         Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
                 newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
-        //尝试新增商品，需要对ProductName对应的ReentrantLock加锁
-        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.productNameLock.get(newProduct.getName());
-        reentrantLock.lock();
-        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
-        productDAO.addProduct(newProduct);
-        categorySecondDAO.addProductCount(categorySecond.getId());
-        categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
-        reentrantLock.unlock();
+        //尝试新增商品，需要对ProductName对应加锁
+        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new Object());
+        synchronized (Statistic.productNameLock.get(newProduct.getName())) {
+            if (productDAO.getProductByName(newProductInfo.getName()) != null)
+                throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+            productDAO.addProduct(newProduct);
+            categorySecondDAO.addProductCount(categorySecond.getId());
+            categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
+        }
         Statistic.productNameLock.remove(newProduct.getName());
     }
 
@@ -98,22 +98,20 @@ public class ProductService {
         Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
                 newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
-        //尝试更新商品，需要对ProductName对应的ReentrantLock加锁
-        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.productNameLock.get(newProduct.getName());
-        reentrantLock.lock();
-
-        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
-        newProduct.setId(productId);
-        productDAO.updateProductById(newProduct);
-        //减少原来分类的商品数
-        categorySecondDAO.reduceProductCount(originCategorySecond.getId());
-        categoryFirstDAO.reduceProductCount(originCategorySecond.getCategoryFirstId());
-        //增加现在分类的商品数
-        categorySecondDAO.addProductCount(categorySecond.getId());
-        categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
-
-        reentrantLock.unlock();
+        //尝试更新商品，需要对ProductName对应加锁
+        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new Object());
+        synchronized (Statistic.productNameLock.get(newProduct.getName())) {
+            if (productDAO.getProductByName(newProductInfo.getName()) != null)
+                throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+            newProduct.setId(productId);
+            productDAO.updateProductById(newProduct);
+            //减少原来分类的商品数
+            categorySecondDAO.reduceProductCount(originCategorySecond.getId());
+            categoryFirstDAO.reduceProductCount(originCategorySecond.getCategoryFirstId());
+            //增加现在分类的商品数
+            categorySecondDAO.addProductCount(categorySecond.getId());
+            categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
+        }
         //后续不需要对此ProductName的锁，因为后续访问都会得到该商品名已存在数据库
         Statistic.productNameLock.remove(newProduct.getName());
     }
@@ -126,21 +124,18 @@ public class ProductService {
     @Transactional(propagation = Propagation.REQUIRED)
     public void deleteProduct(String productName) throws IllegalException {
         //对ProductName对应的ReentrantLock加锁，防止重复删除商品
-        Statistic.productNameLock.putIfAbsent(productName, new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.productNameLock.get(productName);
-
-        reentrantLock.lock();
-        //查找要删除的商品和对应分类
-        Product product = productDAO.getProductByName(productName);
-        if (product == null) throw new IllegalException("商品名", productName, "不存在");
-        CategorySecond categorySecond = categorySecondDAO.getCategorySecondById(product.getCategorySecondId());
-        //删除商品
-        productDAO.deleteProductByName(productName);
-        //减少商品分类的商品数
-        categorySecondDAO.reduceProductCount(categorySecond.getId());
-        categoryFirstDAO.reduceProductCount(categorySecond.getCategoryFirstId());
-        reentrantLock.unlock();
-
+        Statistic.productNameLock.putIfAbsent(productName, new Object());
+        synchronized (Statistic.productNameLock.get(productName)) {
+            //查找要删除的商品和对应分类
+            Product product = productDAO.getProductByName(productName);
+            if (product == null) throw new IllegalException("商品名", productName, "不存在");
+            CategorySecond categorySecond = categorySecondDAO.getCategorySecondById(product.getCategorySecondId());
+            //删除商品
+            productDAO.deleteProductByName(productName);
+            //减少商品分类的商品数
+            categorySecondDAO.reduceProductCount(categorySecond.getId());
+            categoryFirstDAO.reduceProductCount(categorySecond.getCategoryFirstId());
+        }
         Statistic.productNameLock.remove(productName);
     }
 

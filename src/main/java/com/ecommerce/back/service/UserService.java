@@ -81,15 +81,12 @@ public class UserService {
 
         String userName = user.getUserName();
         //对UserName放入对应的锁
-        Statistic.userNameLock.putIfAbsent(userName,new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        //尝试注册用户，需要锁住userName对应的ReentrantLock
-        reentrantLock.lock();
-        if (userDAO.getUserIdByUserName(userName) != null)
-            throw new IllegalException("用户名", userName, "用户名已存在");
-        else
+        Statistic.userNameLock.putIfAbsent(userName,new Object());
+        synchronized (Statistic.userNameLock.get(userName)) {
+            if (userDAO.getUserIdByUserName(userName) != null)
+                throw new IllegalException("用户名", userName, "用户名已存在");
             userDAO.addUser(user);
-        reentrantLock.unlock();
+        }
         //成功注册用户后，无需该锁，因为后续进程在访问数据库时可得到用户名已存在
         Statistic.userNameLock.remove(userName);
     }
@@ -138,16 +135,14 @@ public class UserService {
 
         String userName = user.getUserName();
         //对UserName放入对应的锁
-        Statistic.userNameLock.putIfAbsent(userName,new ReentrantLock());
-        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
-        //尝试更新用户，需要锁住userName对应的ReentrantLock
-        reentrantLock.lock();
-        if (userDAO.getUserIdByUserName(userName) != null)
-            throw new IllegalException("用户名", userName, "用户名已存在");
-        user.setId(userId);
-        userDAO.updateUser(user);
-        reentrantLock.unlock();
-        //成功注册用户后，无需该锁，因为后续进程在访问数据库时可得到用户名已存在
+        Statistic.userNameLock.putIfAbsent(userName,new Object());
+        //尝试更新用户，需要锁住userName对应的锁
+        synchronized (Statistic.userNameLock.get(userName)) {
+            if (userDAO.getUserIdByUserName(userName) != null)
+                throw new IllegalException("用户名", userName, "用户名已存在");
+            user.setId(userId);
+            userDAO.updateUser(user);
+        }
         Statistic.userNameLock.remove(userName);
     }
 
