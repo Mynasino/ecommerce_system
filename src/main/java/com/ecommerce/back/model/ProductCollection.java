@@ -3,22 +3,12 @@ package com.ecommerce.back.model;
 import java.util.Objects;
 
 public class ProductCollection {
-    private int id;
     private int userId;
     private int productId;
 
-    public ProductCollection(int id, int userId, int productId) {
-        this.id = id;
+    public ProductCollection(int userId, int productId) {
         this.userId = userId;
         this.productId = productId;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getUserId() {

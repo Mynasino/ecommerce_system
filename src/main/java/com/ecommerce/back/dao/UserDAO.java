@@ -29,16 +29,19 @@ public interface UserDAO {
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
     User getUserByUserName(String userName);
 
+    @Select(value = {"SELECT id FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
+    Integer getUserIdByUserName(String userName);
+
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
     void addUser(User user);
 
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
-    int deleteUserByUserName(String userName);
+    void deleteUserByUserName(String userName);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET password = #{password} WHERE user_name = #{userName}"})
-    int updateUserPassword(User user);
+    void updateUserPassword(User user);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET ",UPDATE_FIELDS," WHERE id = #{id}"})
-    int updateUser(User user);
+    void updateUser(User user);
 }

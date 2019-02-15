@@ -1,5 +1,6 @@
 package com.ecommerce.back.util;
 
+import com.ecommerce.back.exception.IllegalException;
 import com.sun.mail.util.MailSSLSocketFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,5 +51,10 @@ public class MailUtil {
         message.setSubject(subject);
         message.setText(content);
         Transport.send(message);
+    }
+
+    public static void checkMailAddLegality(String mailAddress) throws IllegalException {
+        if (!mailAddress.matches("[\\w\\.\\-]+@([\\w\\-]+\\.)+[\\w\\-]+"))
+            throw new IllegalException("邮箱地址",mailAddress,"不合法");
     }
 }

@@ -1,5 +1,7 @@
 package com.ecommerce.back.controller;
 
+import com.ecommerce.back.exception.IllegalException;
+import com.ecommerce.back.exception.UnauthorizedException;
 import com.ecommerce.back.jsonInfo.NewOrderComment;
 import com.ecommerce.back.jsonInfo.NewProductComment;
 import com.ecommerce.back.model.OrderComment;
@@ -30,7 +32,7 @@ public class CommentController {
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/order")
     public void addOrderComment(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                   @RequestBody NewOrderComment newOrderComment) throws IOException {
+                                   @RequestBody NewOrderComment newOrderComment) throws IllegalException, UnauthorizedException, IOException {
         commentService.addOrderComment(individualName, newOrderComment);
     }
 
@@ -39,7 +41,7 @@ public class CommentController {
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/product")
     public void addProductComment(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                  @RequestBody NewProductComment newProductComment) throws IOException {
+                                  @RequestBody NewProductComment newProductComment) throws IllegalException, UnauthorizedException, IOException {
         commentService.addProductComment(individualName, newProductComment);
     }
 
@@ -47,15 +49,15 @@ public class CommentController {
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/order/user")
     public OrderComment getOrderCommentByOrderId(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                        @RequestParam("orderId") int orderId) {
-        return commentService.getOrderCommentByOrderId(individualName, orderId);
+                                        @RequestParam("orderId") int orderId) throws IllegalException, UnauthorizedException  {
+        return commentService.getOrderComment(individualName, orderId);
     }
 
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/product/user")
-    public List<ProductComment> getProductCommentsByUserName(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) {
+    public List<ProductComment> getProductCommentsByUserName(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
         return commentService.getProductCommentsByUserName(individualName);
     }
 

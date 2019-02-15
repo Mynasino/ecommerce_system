@@ -1,5 +1,6 @@
 package com.ecommerce.back.controller;
 
+import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
 import com.ecommerce.back.model.Product;
 import com.ecommerce.back.model.User;
@@ -7,14 +8,13 @@ import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.UserService;
-import com.ecommerce.back.util.ResponseUtil;
 import io.swagger.annotations.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
-
+import java.io.IOException;
 import java.util.List;
 
 @RestController //@Controller + @ResponseBody + return entity
@@ -28,39 +28,31 @@ public class UserController {
     }
 
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE})
-    public String RegisterUser(@RequestBody RegisterInfo registerInfo, HttpServletResponse response) {
-        String info = userService.registerUser(registerInfo);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void RegisterUser(@RequestBody RegisterInfo registerInfo) throws IllegalException, IOException {
+        userService.registerUser(registerInfo);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PatchMapping
-    public String modifyPassWord(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                 @RequestParam("newPassword") String newPassword,
-                                 HttpServletResponse response) {
-        String info = userService.modifyPassword(individualName, newPassword);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void modifyPassWord(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
+                                 @RequestParam("newPassword") String newPassword) throws IllegalException{
+        userService.modifyPassword(individualName, newPassword);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping
-    public User queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) {
-        User user = userService.getUserByUserName(individualName);
-        if (user == null) throw new IllegalStateException("user not exist");
-        user.setSalt("not visitable");
-        return user;
+    public User queryUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
+        return userService.getUserByUserName(individualName);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/productCollect")
-    public String collectProduct(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                 @RequestParam("productId") int productId,
-                                 HttpServletResponse response) {
-        String info = userService.collectProduct(individualName, productId);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void collectProduct(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
+                                 @RequestParam("productId") int productId) throws IllegalException, DataAccessException {
+        userService.collectProduct(individualName, productId);
     }
 
 
@@ -68,18 +60,15 @@ public class UserController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @DeleteMapping("/productCollect")
-    public String cancelCollectProduct(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                 @RequestParam("productId") int productId,
-                                 HttpServletResponse response) {
-        String info = userService.cancelCollectProduct(individualName, productId);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void cancelCollectProduct(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
+                                 @RequestParam("productId") int productId) throws IllegalException {
+        userService.cancelCollectProduct(individualName, productId);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
-    @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
+    @AuthenticationRequired(levels = {AuthenticationLevel.USER, AuthenticationLevel.ADMIN}, specifics = {true, false})
     @GetMapping("/productCollect")
-    public List<Product> getProductCollection(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                              HttpServletResponse response) {
+    public List<Product> getProductCollection(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
         return userService.getProductCollectionByUserName(individualName);
     }
 }

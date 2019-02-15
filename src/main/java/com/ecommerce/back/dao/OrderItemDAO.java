@@ -11,12 +11,9 @@ import java.util.List;
 @Mapper
 public interface OrderItemDAO {
     String TABLE_NAME = "order_item";
-    String SELECT_FIELDS = "id,order_id,product_id,count";
+    String SELECT_FIELDS = "order_id,product_id,count";
     String INSERT_FIELDS_DB = "order_id,product_id,count";
     String INSERT_FIELDS = "#{orderId},#{productId},#{count}";
-
-    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
-    OrderItem getOrderItemById(int id);
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE order_id = #{orderId} and product_id = #{productId}"})
     OrderItem getOrderItemByOrderIdAndProductId(@Param("orderId") int orderId, @Param("productId") int productId);
@@ -31,6 +28,6 @@ public interface OrderItemDAO {
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE order_id = #{orderId} AND product_id = #{productId}"})
     void deleteOrderItemByShoppingCartIdAndProductId(@Param("orderId") int shoppingCartId, @Param("productId") int productId);
 
-    @Update(value = {"UPDATE ", TABLE_NAME, " SET count = #{count} WHERE id = #{id}"})
-    int updateOrderItemCountById(@Param("id") int id, @Param("count") int count);
+    @Update(value = {"UPDATE ", TABLE_NAME, " SET count = #{count} WHERE order_id = #{orderId} AND product_id = #{productId}"})
+    int updateOrderItemCountByOrderItem(OrderItem orderItem);
 }

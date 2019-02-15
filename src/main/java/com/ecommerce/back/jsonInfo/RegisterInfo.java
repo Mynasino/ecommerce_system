@@ -15,6 +15,16 @@ public class RegisterInfo {
     private String imgType;
     private String mail;
 
+    public RegisterInfo(){}
+
+    public RegisterInfo(String userName, String password, String imgBase64String, String imgType, String mail) {
+        this.userName = userName;
+        this.password = password;
+        this.imgBase64String = imgBase64String;
+        this.imgType = imgType;
+        this.mail = mail;
+    }
+
     public String getUserName() {
         return userName;
     }

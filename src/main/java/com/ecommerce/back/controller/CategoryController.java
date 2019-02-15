@@ -1,5 +1,6 @@
 package com.ecommerce.back.controller;
 
+import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.model.CategoryFirst;
 import com.ecommerce.back.model.CategorySecond;
 import com.ecommerce.back.model.Product;
@@ -7,13 +8,11 @@ import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.CategoryService;
-import com.ecommerce.back.util.ResponseUtil;
 import io.swagger.annotations.ApiImplicitParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @RestController
@@ -46,33 +45,29 @@ public class CategoryController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @PostMapping("/first")
-    public String addCategoryFirst(@RequestParam("categoryFirstName") String categoryFirstName, HttpServletResponse response) {
-        String info = categoryService.addCategoryFirst(categoryFirstName);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void addCategoryFirst(@RequestParam("categoryFirstName") String categoryFirstName) throws IllegalException {
+        categoryService.addCategoryFirst(categoryFirstName);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @DeleteMapping("/first")
-    public String deleteCategoryFirst(@RequestParam("categoryFirstName") String categoryFirstName, HttpServletResponse response) {
-        String info = categoryService.deleteCategoryFirst(categoryFirstName);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void deleteCategoryFirst(@RequestParam("categoryFirstName") String categoryFirstName) {
+        categoryService.deleteCategoryFirst(categoryFirstName);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @PostMapping("/second")
-    public String addCategorySecond(@RequestParam("categorySecondName") String categorySecondName,
-                                    @RequestParam("categoryFirstName") String categoryFirstName, HttpServletResponse response) {
-        String info = categoryService.addCategorySecond(categorySecondName, categoryFirstName);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void addCategorySecond(@RequestParam("categorySecondName") String categorySecondName,
+                                    @RequestParam("categoryFirstName") String categoryFirstName) throws IllegalException {
+        categoryService.addCategorySecond(categorySecondName, categoryFirstName);
     }
 
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @DeleteMapping("/second")
-    public String deleteCategorySecond(@RequestParam("categorySecondName") String categorySecondName, HttpServletResponse response) {
-        String info = categoryService.deleteCategorySecond(categorySecondName);
-        return ResponseUtil.SC_OKorSC_BAD_REQUESTResponse(info, response);
+    public void deleteCategorySecond(@RequestParam("categorySecondName") String categorySecondName) {
+        categoryService.deleteCategorySecond(categorySecondName);
     }
 }

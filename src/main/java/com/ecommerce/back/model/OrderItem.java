@@ -2,25 +2,15 @@ package com.ecommerce.back.model;
 
 import java.util.Objects;
 
-public class OrderItem {
-    private int id;
+public class OrderItem { ;
     private int orderId;
     private int productId;
     private int count;
 
-    public OrderItem(int id, int orderId, int productId, int count) {
-        this.id = id;
+    public OrderItem(int orderId, int productId, int count) {
         this.orderId = orderId;
         this.productId = productId;
         this.count = count;
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public int getOrderId() {

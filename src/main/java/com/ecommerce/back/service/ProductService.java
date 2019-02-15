@@ -4,9 +4,11 @@ import com.alibaba.fastjson.JSON;
 import com.ecommerce.back.dao.CategoryFirstDAO;
 import com.ecommerce.back.dao.CategorySecondDAO;
 import com.ecommerce.back.dao.ProductDAO;
+import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.jsonInfo.NewProductInfo;
 import com.ecommerce.back.model.CategorySecond;
 import com.ecommerce.back.model.Product;
+import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.ImgUtil;
 import com.ecommerce.back.util.ProductUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class ProductService {
@@ -30,90 +33,115 @@ public class ProductService {
         this.categoryFirstDAO = categoryFirstDAO;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    public String addProduct(NewProductInfo newProductInfo) throws IOException, IllegalStateException  {
-        if (!ProductUtil.isLegalNewProductInfo(newProductInfo)) return "illegal new product information";
-        CategorySecond categorySecond = categorySecondDAO.getCategorySecondByName(newProductInfo.getCategorySecondName());
-        if (categorySecond == null) return "categorySecond " + newProductInfo.getCategorySecondName() + " not exist";
-        if (productDAO.getProductByName(newProductInfo.getName()) != null) return "product name " + newProductInfo.getName() + " already exist";
+    /**
+     * 根据新增商品所需信息(newProductInfo)来新增商品，商品名不能重复
+     * @param newProductInfo 新增商品所需信息
+     * @throws IllegalException 信息不合法
+     * @throws IOException 上传图片IOException
+     */
+    @Transactional(propagation = Propagation.REQUIRED) //需要事务来保证新增商品，增加对应一级分类，二级分类的商品数同时生效/失效
+    public void addProduct(NewProductInfo newProductInfo) throws IllegalException ,IOException {
+        ProductUtil.checkNewProductInfoLegality(newProductInfo);
 
+        //获取新商品的二级分类
+        CategorySecond categorySecond = categorySecondDAO.getCategorySecondByName(newProductInfo.getCategorySecondName());
+        if (categorySecond == null) throw new IllegalException("二级分类", newProductInfo.getCategorySecondName(), "不存在");
+
+        //如果商品名不存在，则上传多张图片，并构造新Product实例
+        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
         String[] imgBase64Strings = newProductInfo.getImgBase64Strings();
         String[] imgTypes = newProductInfo.getImgTypes();
-
-        String[] imgUrls = ImgUtil.MultiBase64BytesToLocalImg(imgBase64Strings, imgTypes);
+        String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
         Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
                 newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
-        //add new Product and add new categorySecond's and categoryFirst's product count
-        //Unified throw exceptions
-        if (productDAO.addProduct(newProduct) == 0)
-            throw new IllegalStateException("failed to add new Product");
-        if (categorySecondDAO.addProductCount(categorySecond.getId()) == 0)
-            throw new IllegalStateException("failed to add categorySecond " + categorySecond.getName() + " Count");
-        if (categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId()) == 0)
-            throw new IllegalStateException("failed to add categoryFirst with id:" + categorySecond.getCategoryFirstId() + " Count");
-
-        return "success";
+        //尝试新增商品，需要对ProductName对应的ReentrantLock加锁
+        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.productNameLock.get(newProduct.getName());
+        reentrantLock.lock();
+        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+        productDAO.addProduct(newProduct);
+        categorySecondDAO.addProductCount(categorySecond.getId());
+        categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
+        reentrantLock.unlock();
+        Statistic.productNameLock.remove(newProduct.getName());
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    public String modifyProduct(NewProductInfo newProductInfo, int productId) throws IOException, IllegalStateException {
-        if (!ProductUtil.isLegalNewProductInfo(newProductInfo)) return "illegal new product information";
+    /**
+     * 根据新增商品所需信息(newProductInfo)来新增商品，商品名不能重复
+     * @param newProductInfo 新增商品所需信息
+     * @param productId 要修改的商品Id
+     * @throws IllegalException 信息不合法
+     * @throws IOException 上传图片IOException
+     */
+    @Transactional(propagation = Propagation.REQUIRED) //多个更新操作，需要事务
+    public void modifyProduct(NewProductInfo newProductInfo, int productId) throws IOException, IllegalException {
+        ProductUtil.checkNewProductInfoLegality(newProductInfo);
 
-        //get the origin Product and CategorySecond
-        Product originProduct = productDAO.getProductById(productId);
-        if (originProduct == null) return "product id " + productId + " not exist";
-        //if product's name has changed, ensure not conflict with other product
-        if (!newProductInfo.getName().equals(originProduct.getName()))
-            if (productDAO.getProductByName(newProductInfo.getName()) != null)
-                return "product with name: " + newProductInfo.getName() + " already exist";
-        CategorySecond originCategorySecond = categorySecondDAO.getCategorySecondById(originProduct.getCategorySecondId());
-
-        //get the new CategorySecond
+        //获取新商品的二级分类
         CategorySecond categorySecond = categorySecondDAO.getCategorySecondByName(newProductInfo.getCategorySecondName());
-        if (categorySecond == null) return "categorySecond " + newProductInfo.getCategorySecondName() + " not exist";
+        if (categorySecond == null) throw new IllegalException("二级分类", newProductInfo.getCategorySecondName(), "不存在");
 
-        //store and construct the new Product
+        //根据productId来获取原来的Product
+        Product originProduct = productDAO.getProductById(productId);
+        if (originProduct == null) throw new IllegalException("商品Id", productId + "", "不存在");
+
+        //获取原来商品的二级分类
+        CategorySecond originCategorySecond = categorySecondDAO.getCategorySecondById(originProduct.getCategorySecondId());
+        if (originCategorySecond == null) throw new IllegalException("二级分类Id", originProduct.getCategorySecondId() + "", "不存在");
+
+        //如果商品名不存在，则上传多张图片，并构造新Product实例
+        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
         String[] imgBase64Strings = newProductInfo.getImgBase64Strings();
         String[] imgTypes = newProductInfo.getImgTypes();
-        String[] imgUrls = ImgUtil.MultiBase64BytesToLocalImg(imgBase64Strings, imgTypes);
-        Product newProduct = new Product(productId, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
+        String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
+        Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
                 newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
-        //if origin CategorySecond exist, reduce
-        if (originCategorySecond != null) {
-            if (categorySecondDAO.reduceProductCount(originCategorySecond.getId()) == 0)
-                throw new IllegalStateException("failed to reduce categorySecond " + originCategorySecond.getName() + " Count");
-            if (categoryFirstDAO.reduceProductCount(originCategorySecond.getCategoryFirstId()) == 0)
-                throw new IllegalStateException("failed to reduce categoryFirst with id:" + originCategorySecond.getCategoryFirstId() + " Count");
-        }
-        //add new Product and add new categorySecond's and categoryFirst's product count
-        if (productDAO.updateProduct(newProduct) == 0)
-            throw new IllegalStateException("failed to add new Product");
-        if (categorySecondDAO.addProductCount(categorySecond.getId()) == 0)
-            throw new IllegalStateException("failed to add categorySecond " + categorySecond.getName() + " Count");
-        if (categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId()) == 0)
-            throw new IllegalStateException("failed to add categoryFirst with id:" + categorySecond.getCategoryFirstId() + " Count");
+        //尝试更新商品，需要对ProductName对应的ReentrantLock加锁
+        Statistic.productNameLock.putIfAbsent(newProduct.getName(), new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.productNameLock.get(newProduct.getName());
+        reentrantLock.lock();
 
-        return "success";
+        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+        newProduct.setId(productId);
+        productDAO.updateProductById(newProduct);
+        //减少原来分类的商品数
+        categorySecondDAO.reduceProductCount(originCategorySecond.getId());
+        categoryFirstDAO.reduceProductCount(originCategorySecond.getCategoryFirstId());
+        //增加现在分类的商品数
+        categorySecondDAO.addProductCount(categorySecond.getId());
+        categoryFirstDAO.addProductCount(categorySecond.getCategoryFirstId());
+
+        reentrantLock.unlock();
+        //后续不需要对此ProductName的锁，因为后续访问都会得到该商品名已存在数据库
+        Statistic.productNameLock.remove(newProduct.getName());
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    public String deleteProduct(String productName) throws IllegalStateException {
+    /**
+     * 根据商品名删除商品
+     * @param productName 商品名
+     * @throws IllegalException 信息不合法
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void deleteProduct(String productName) throws IllegalException {
+        //对ProductName对应的ReentrantLock加锁，防止重复删除商品
+        Statistic.productNameLock.putIfAbsent(productName, new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.productNameLock.get(productName);
+
+        reentrantLock.lock();
+        //查找要删除的商品和对应分类
         Product product = productDAO.getProductByName(productName);
-        if (product == null) return "no product with name " + productName;
+        if (product == null) throw new IllegalException("商品名", productName, "不存在");
         CategorySecond categorySecond = categorySecondDAO.getCategorySecondById(product.getCategorySecondId());
+        //删除商品
+        productDAO.deleteProductByName(productName);
+        //减少商品分类的商品数
+        categorySecondDAO.reduceProductCount(categorySecond.getId());
+        categoryFirstDAO.reduceProductCount(categorySecond.getCategoryFirstId());
+        reentrantLock.unlock();
 
-        if (categorySecond != null) {
-            if (categorySecondDAO.reduceProductCount(categorySecond.getId()) == 0)
-                throw new IllegalStateException("failed to reduce categorySecond " + categorySecond.getName() + " Count");
-            if (categoryFirstDAO.reduceProductCount(categorySecond.getCategoryFirstId()) == 0)
-                throw new IllegalStateException("failed to reduce categoryFirst with id:" + categorySecond.getCategoryFirstId() + " Count");
-        }
-        if (productDAO.deleteProductByName(productName) == 0)
-            throw new IllegalStateException("failed to delete product " + productName);
-
-        return "success";
+        Statistic.productNameLock.remove(productName);
     }
 
     public Product getProductByProductId(int productId) {

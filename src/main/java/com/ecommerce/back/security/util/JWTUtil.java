@@ -14,6 +14,13 @@ public class JWTUtil {
     public static final String HEADER_KEY = "Authentication";
     public static final String SPECIFIC_PARAM_NAME = "IndividualName";
 
+    /**
+     * 产生JWT,Subject包含用户名,claim包含对应的权限级别,传入的Date对象被设为这个JWT的过期时间
+     * @param userName 用户名
+     * @param authenticationLevel 权限级别
+     * @param expiredTime 任意Date对象，后续通过setTime设为这个JWT的过期时间
+     * @return 产生的JWT
+     */
     public static String getJWTString(String userName, AuthenticationLevel authenticationLevel, Date expiredTime) {
         expiredTime.setTime(System.currentTimeMillis() + EXPIRED_TIME);
         return TOKEN_PREFIX +

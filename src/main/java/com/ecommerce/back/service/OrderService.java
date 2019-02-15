@@ -3,6 +3,8 @@ package com.ecommerce.back.service;
 import com.ecommerce.back.dao.OrderDAO;
 import com.ecommerce.back.dao.OrderItemDAO;
 import com.ecommerce.back.dao.UserDAO;
+import com.ecommerce.back.exception.IllegalException;
+import com.ecommerce.back.exception.UnauthorizedException;
 import com.ecommerce.back.model.Order;
 import com.ecommerce.back.model.OrderItem;
 import com.ecommerce.back.model.OrderStatus;
@@ -18,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class OrderService {
@@ -34,111 +37,174 @@ public class OrderService {
         this.orderItemDAO = orderItemDAO;
     }
 
-    public List<Order> getOrdersOfSpecificUser(String userName) {
+    /**
+     * 获得指定用户名的订单列表
+     * @param userName 用户名
+     * @return 订单列表
+     * @throws IllegalException 用户名不存在
+     */
+    public List<Order> getOrdersOfSpecificUser(String userName) throws IllegalException {
         User user = userDAO.getUserByUserName(userName);
-        if (user == null) {
-            logger.warn("Authentication pass of user that don't exist");
-            return null;
-        }
-        else
-            return orderDAO.getOrdersByUserId(user.getId());
+        if (user == null) throw new IllegalException("用户名", userName, "不存在");
+        return orderDAO.getOrdersByUserId(user.getId());
     }
 
-    public List<OrderItem> getOrderItemsByOrderId(String userName, int orderId) {
-        String info = validationOfUserToOrderId(userName, orderId);
-        if (!info.equals("success")) throw new IllegalStateException(info);
-
+    /**
+     * 根据订单Id获取该订单下所有订单项
+     * @param userName 用户名
+     * @param orderId 订单Id
+     * @return 订单项列表
+     * @throws IllegalException 订单Id不存在
+     * @throws UnauthorizedException 该用户不是订单的拥有者
+     */
+    public List<OrderItem> getOrderItemsByOrderId(String userName, int orderId) throws IllegalException, UnauthorizedException {
+        validationOfUserToOrderId(userName, orderId);
         return orderItemDAO.getOrderItemByOrderId(orderId);
     }
 
-    public Integer getOrCreateShoppingCartIdByUserName(String userName) throws IllegalStateException {
+    /**
+     * 根据用户名创建(如果数据库中没有)或获取(数据库中已存在)状态为购物车的订单
+     * @param userName 用户名
+     * @return 创建的订单Id
+     * @throws IllegalException 信息不合法
+     */
+    public Integer getOrCreateShoppingCartIdByUserName(String userName) throws IllegalException {
         User user = userDAO.getUserByUserName(userName);
-        if (user == null) {
-            logger.warn("Authentication pass of user that don't exist");
-            return null;
-        }
+        if (user == null) throw new IllegalException("用户名", userName, "不存在");
 
-        int userId = user.getId();
-        //Dual lock guarantees no repeat of creating a shopping cart
         Integer shoppingCartId;
-        if ((shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId())) == null) {
-            Statistic.userLocks[userId].lock();
-            if (orderDAO.getShoppingCartOrderIdByUserId(user.getId()) == null) {
-                Order newShoppingCart = new Order();
-                newShoppingCart.setUserId(user.getId());
-                newShoppingCart.setCreateTime(new Date());
-                newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
+        shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+        //如果存在购物车，直接返回
+        if (shoppingCartId != null) return shoppingCartId;
+        //如果不存在对应用户的购物车，需要锁住对应用户名的ReentrantLock，防止重复创建购物车
+        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
 
-                shoppingCartId = orderDAO.addOrder(newShoppingCart);
-            }
-            Statistic.userLocks[userId].unlock();
+        reentrantLock.lock();
+        shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+        //仍然不存在购物车，则需要创建购物车
+        if (shoppingCartId == null) {
+            Order newShoppingCart = new Order();
+            newShoppingCart.setUserId(user.getId());
+            newShoppingCart.setCreateTime(new Date());
+            newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
+            shoppingCartId = orderDAO.addOrder(newShoppingCart);
         }
+        reentrantLock.unlock();
+
+        Statistic.userNameLock.remove(userName);
+
         return shoppingCartId;
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    public String addOrderItemToShoppingCart(String userName, int shoppingCartId, int productId, int count) {
-        if (count <= 0) return "count must be > 0";
+    /**
+     * 向购物车中添加商品项，不允许重复添加(通过添加数据库联合主键实现)
+     * @param userName 用户名
+     * @param shoppingCartId 购物车Id
+     * @param productId 商品Id
+     * @param count 要购买的数量
+     * @throws IllegalException 信息不合法
+     * @throws UnauthorizedException 给定用户不是给定购物车Id的拥有者
+     */
+    public void addOrderItemToShoppingCart(String userName, int shoppingCartId, int productId, int count) throws IllegalException, UnauthorizedException {
+        if (count <= 0) throw new IllegalException("要购买的数量", count + "", "必须大于0");
+
+        //需要对UserName加锁确保添加时给定的用户和购物车Id是合法的合法性
+        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
+        reentrantLock.lock();
+
         int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
+        orderItemDAO.addOrderItem(new OrderItem(shoppingCartId, productId, count));
 
-        //not allow repeatable add of same orderItem to same shoppingCart
-        if (orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId) == null) {
-            Statistic.userLocks[userId].lock();
-            if (orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId) == null) {
-                orderItemDAO.addOrderItem(new OrderItem(-1, shoppingCartId, productId, count));
-            } else
-                throw new IllegalStateException("orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " already exist");
-            Statistic.userLocks[userId].unlock();
-        } else
-            throw new IllegalStateException("orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " already exist");
-
-        return "success";
+        reentrantLock.unlock();
+        Statistic.userNameLock.remove(userName);
     }
 
-    @Transactional(propagation = Propagation.REQUIRED, isolation = Isolation.REPEATABLE_READ)
-    public String modifyOrderItemCount(String userName, int shoppingCartId, int productId, int count) {
-        if (count <= 0) return "count must be > 0";
-        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
+    /**
+     * 修改购物车中订单项的购买数量
+     * @param userName 用户名
+     * @param shoppingCartId 购物车Id
+     * @param productId 商品Id
+     * @param count 要购买的数量
+     * @throws IllegalException 信息不合法
+     * @throws UnauthorizedException 给定用户不是给定购物车Id的拥有者
+     */
+    public void modifyOrderItemCount(String userName, int shoppingCartId, int productId, int count) throws IllegalException, UnauthorizedException {
+        if (count <= 0) throw new IllegalException("要购买的数量", count + "", "必须大于0");
 
-        OrderItem originOrderItem = orderItemDAO.getOrderItemByOrderIdAndProductId(shoppingCartId, productId);
-        if (originOrderItem == null) return "orderItem with productId: " +  productId + " and shoppingCartId: " + shoppingCartId + " not exist";
-        return orderItemDAO.updateOrderItemCountById(originOrderItem.getId(), count) > 0 ? "success" : "failed to modify count of OrderItem " + originOrderItem.getId();
+        //需要对UserName加锁确保添加合法性
+        Statistic.userNameLock.putIfAbsent(userName, new ReentrantLock());
+        ReentrantLock reentrantLock = Statistic.userNameLock.get(userName);
+        reentrantLock.lock();
+
+        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
+        orderItemDAO.updateOrderItemCountByOrderItem(new OrderItem(shoppingCartId, productId, count));
+
+        reentrantLock.unlock();
+        Statistic.userNameLock.remove(userName);
     }
 
-    public String deleteOrderItemInShoppingCart(String userName, int shoppingCartId, int productId) {
-        int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
-
+    /**
+     * 删除购物车中的商品项
+     * @param userName 用户名
+     * @param shoppingCartId 购物车Id
+     * @param productId 商品Id
+     * @throws IllegalException 信息不合法
+     * @throws UnauthorizedException 给定用户不是给定购物车Id的拥有者
+     */
+    public void deleteOrderItemInShoppingCart(String userName, int shoppingCartId, int productId) throws IllegalException, UnauthorizedException {
+        validationOfUserToShoppingCartId(userName, shoppingCartId);
         orderItemDAO.deleteOrderItemByShoppingCartIdAndProductId(shoppingCartId, productId);
-        return "success";
     }
 
-    public String submitShoppingCart(String userName, int shoppingCartId, String address, String mobile) {
+    /**
+     * 提交购物车为未支付订单
+     * @param userName 用户名
+     * @param shoppingCartId 购物车Id
+     * @param address 收货地址
+     * @param mobile 手机号码
+     * @throws IllegalException 信息不合法
+     * @throws UnauthorizedException 给定用户不是给定购物车Id的拥有者
+     */
+    public void submitShoppingCart(String userName, int shoppingCartId, String address, String mobile) throws IllegalException, UnauthorizedException {
         int userId = validationOfUserToShoppingCartId(userName, shoppingCartId);
-
         orderDAO.updateStatusToPendingPayment(shoppingCartId, address, mobile);
-        return "success";
     }
 
-    private int validationOfUserToShoppingCartId(String userName, int orderId) {
+    /**
+     * 验证给出的订单Id是否处在购物车状态，且该用户是购物车的拥有者，若不通过验证则抛出异常
+     * @param userName 用户名
+     * @param orderId 订单Id
+     * @throws IllegalException 购物车Id不存在/不是购物车Id/用户Id不存在
+     * @throws UnauthorizedException 用户不是购物车的拥有者
+     * @return 用户Id
+     */
+    private int validationOfUserToShoppingCartId(String userName, int orderId) throws IllegalException, UnauthorizedException {
         Order shoppingCart = orderDAO.getOrderById(orderId);
-        if (shoppingCart == null) throw new IllegalStateException("ShoppingCart id " + orderId + " not exist");
-        if (shoppingCart.getStatusCode() != OrderStatus.SHOPPING_CART) throw new IllegalStateException("offered id is not shoppingCart id");
+        if (shoppingCart == null) throw new IllegalException("购物车Id", orderId + "", "不存在");
+        if (shoppingCart.getStatusCode() != OrderStatus.SHOPPING_CART) throw new IllegalException("订单Id", orderId + "", "不是购物车");
 
         User user = userDAO.getUserById(shoppingCart.getUserId());
-        if (user == null) throw new IllegalStateException("User id " + shoppingCart.getUserId() + " not exist");
-        if (!user.getUserName().equals(userName)) throw new IllegalStateException("user " + userName + " try modify " + "orderItem to " + user.getUserName() + "'s shoppingCart");
+        if (user == null) throw new IllegalException("用户Id", shoppingCart.getUserId() + "", " 不存在");
+        if (!user.getUserName().equals(userName)) throw new UnauthorizedException(userName, user.getUserName());
 
         return user.getId();
     }
 
-    private String validationOfUserToOrderId(String userName, int orderId) {
+    /**
+     * 验证对应用户名是否是对应订单的拥有者，若不是则抛出异常
+     * @param userName 用户名
+     * @param orderId 订单Id
+     * @throws IllegalException 订单Id不存在
+     * @throws UnauthorizedException 对应用户名不是该订单的拥有者
+     */
+    private void validationOfUserToOrderId(String userName, int orderId) throws IllegalException, UnauthorizedException {
         Order shoppingCart = orderDAO.getOrderById(orderId);
-        if (shoppingCart == null) return "Order id " + orderId + " not exist";
+        if (shoppingCart == null) throw new IllegalException("订单Id", orderId + "", "不存在");
 
         User user = userDAO.getUserById(shoppingCart.getUserId());
-        if (user == null) return "User id " + shoppingCart.getUserId() + " not exist";
-        if (!user.getUserName().equals(userName)) return "user " + userName + " try visit " + "orderItem to " + user.getUserName() + "'s order";
-
-        return "success";
+        if (user == null) throw new IllegalException("购物车Id", shoppingCart.getUserId() + "", "不存在");
+        if (!user.getUserName().equals(userName)) throw new UnauthorizedException(userName, user.getUserName());
     }
 }

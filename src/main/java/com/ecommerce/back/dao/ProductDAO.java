@@ -31,11 +31,11 @@ public interface ProductDAO {
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
-    int addProduct(Product product);
+    void addProduct(Product product);
 
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
-    int deleteProductByName(String name);
+    void deleteProductByName(String name);
 
     @Update(value = {"UPDATE ", TABLE_NAME, " SET ", UPDATE_FIELDS ," WHERE id = #{id}"})
-    int updateProduct(Product product);
+    void updateProductById(Product product);
 }
