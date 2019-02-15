@@ -1,6 +1,5 @@
 package com.ecommerce.back.exception;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.ecommerce.back.security.exception.JWTExpiredException;
 import com.ecommerce.back.security.exception.JWTIllegalException;

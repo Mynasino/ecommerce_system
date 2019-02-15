@@ -15,6 +15,10 @@ import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * 保护Controller方法调用的拦截器
+ * 从请求头取出Token并验证是否具有对应权限
+ */
 @Component
 public class JWTAuthenticationInterceptor implements HandlerInterceptor {
     @Override

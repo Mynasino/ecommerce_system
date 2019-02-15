@@ -1,12 +1,12 @@
 package com.ecommerce.back.security;
 
 /**
- * Defines the authentication level for resources
+ * 定义资源的访问权限
  */
 public enum AuthenticationLevel {
-    /** required USER Authentication **/
+    /** 需要USER的访问权限 **/
     USER("USER"),
-    /** required ADMIN Authentication **/
+    /** 需要ADMIN的访问权限 **/
     ADMIN("ADMIN");
 
     public final String name;

@@ -1,7 +1,17 @@
 package com.ecommerce.back.security;
 
+/**
+ * 对User和Admin类的统一封装
+ * 用于解析请求头中的JWT后返回统一的实体类
+ */
 public class PersonDetail {
+    /**
+     * 用户名或管理员名
+     */
     private String name;
+    /**
+     * 具备的权限级别
+     */
     private AuthenticationLevel authenticationLevel;
 
     public PersonDetail(String name, AuthenticationLevel authenticationLevel) {
