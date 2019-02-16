@@ -10,6 +10,7 @@ import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.UserService;
 import com.ecommerce.back.statistic.Statistic;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +29,14 @@ public class AdminController {
         this.userService = userService;
     }
 
+    @ApiOperation("获取在线用户数量和在线用户的用户名数组")
     @GetMapping(value = "/onlineUsers")
     public OnlineUsersInfo getOnlineStatistic() {
         Set<String> keySet = Statistic.onlineUsers.keySet();
         return new OnlineUsersInfo(keySet.size(), keySet);
     }
 
+    @ApiOperation("查询用户名为individualName的用户的信息，需要在header放管理员token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @GetMapping(value = "/user")
@@ -41,6 +44,7 @@ public class AdminController {
         return userService.getUserByUserName(individualName);
     }
 
+    @ApiOperation("修改用户Id为id的用户，RegisterInfo里放修改后的用户信息，需要在header放管理员token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @PutMapping(value = "/user")
@@ -49,6 +53,7 @@ public class AdminController {
         userService.updateUser(registerInfo, id);
     }
 
+    @ApiOperation("删除用户名为individualName的用户，需要在header放管理员token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @DeleteMapping(value = "/user")

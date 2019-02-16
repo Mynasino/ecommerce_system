@@ -27,11 +27,13 @@ public class UserController {
         this.userService = userService;
     }
 
+    @ApiOperation("注册用户")
     @PostMapping(consumes = {MediaType.APPLICATION_JSON_UTF8_VALUE})
     public void RegisterUser(@RequestBody RegisterInfo registerInfo) throws IllegalException, IOException {
         userService.registerUser(registerInfo);
     }
 
+    @ApiOperation("修改用户individualName的密码为newPassword，需要individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PatchMapping
@@ -40,6 +42,7 @@ public class UserController {
         userService.modifyPassword(individualName, newPassword);
     }
 
+    @ApiOperation("查询用户individualName的信息，需要individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping
@@ -47,6 +50,7 @@ public class UserController {
         return userService.getUserByUserName(individualName);
     }
 
+    @ApiOperation("用户individualName对商品productId作出收藏行为，需要带上individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/productCollect")
@@ -55,8 +59,7 @@ public class UserController {
         userService.collectProduct(individualName, productId);
     }
 
-
-
+    @ApiOperation("用户individualName对商品productId取消收藏行为，需要带上individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @DeleteMapping("/productCollect")
@@ -65,6 +68,7 @@ public class UserController {
         userService.cancelCollectProduct(individualName, productId);
     }
 
+    @ApiOperation("查询用户individualName的所有收藏商品，需要带上individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER, AuthenticationLevel.ADMIN}, specifics = {true, false})
     @GetMapping("/productCollect")

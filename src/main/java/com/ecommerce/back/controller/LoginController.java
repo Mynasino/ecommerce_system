@@ -11,6 +11,7 @@ import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.statistic.Statistic;
 import com.ecommerce.back.util.MailUtil;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class LoginController {
         this.adminService = adminService;
     }
 
+    @ApiOperation("用户登陆，会返回JWTInfo，指定了登陆后访问敏感资源时需要在请求头里添加的key->token")
     @PostMapping("/user")
     public JWTInfo userLogin(@RequestParam("userName") String userName,
                             @RequestParam("password") String password) throws IllegalException {
@@ -46,6 +48,7 @@ public class LoginController {
         return new JWTInfo(JWTUtil.HEADER_KEY, jwtString);
     }
 
+    @ApiOperation("管理员登陆，会返回JWTInfo，指定了登陆后访问敏感资源时需要在请求头里添加的key->token")
     @PostMapping("/admin")
     public JWTInfo adminLogin(@RequestParam("adminName") String adminName,
                              @RequestParam("password") String password) throws IllegalException {
@@ -54,6 +57,7 @@ public class LoginController {
         return new JWTInfo(JWTUtil.HEADER_KEY, JWTUtil.getJWTString(adminName, AuthenticationLevel.ADMIN, new Date()));
     }
 
+    @ApiOperation("忘记密码时，带上参数用户名individualName，新密码newPassword访问，会发送重置密码邮件")
     @PatchMapping("/user/retrieve")
     public void sendPasswordResetMail(@RequestParam("userName") String individualName,
                                  @RequestParam("newPassword") String newPassword) throws IllegalException {
@@ -68,6 +72,7 @@ public class LoginController {
         }
     }
 
+    @ApiOperation("重置密码邮件里的链接，被访问则会将对应用户的密码重置")
     @GetMapping("/user/retrieve/{jwtString}/{newPassword}")
     public String retrieveURLVisit(@PathVariable("jwtString") String jwtString,
                                       @PathVariable("newPassword") String newPassword) {

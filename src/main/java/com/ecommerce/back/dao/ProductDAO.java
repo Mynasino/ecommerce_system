@@ -29,6 +29,9 @@ public interface ProductDAO {
                                               @Param("limit") int limit,
                                               @Param("offset") int offset);
 
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME})
+    List<Product> getAllProducts();
+
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
     void addProduct(Product product);

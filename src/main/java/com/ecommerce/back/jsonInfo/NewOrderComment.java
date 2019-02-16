@@ -1,8 +1,14 @@
 package com.ecommerce.back.jsonInfo;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+@ApiModel(value = "NewOrderComment", description = "新增订单评论所需信息")
 public class NewOrderComment {
     private String content;
+    @ApiModelProperty(value = "多图评论，上传字符串数组，每个字符串是一张图片的Base64编码")
     private String[] imgBase64Strings;
+    @ApiModelProperty(value = "上传字符串数组对应位置的图片类型，支持png/jpg")
     private String[] imgTypes;
     private int scoreLogistics;
     private int scoreQuality;

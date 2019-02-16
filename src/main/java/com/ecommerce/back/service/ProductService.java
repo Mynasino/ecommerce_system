@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.locks.ReentrantLock;
 
 @Service
@@ -141,5 +142,9 @@ public class ProductService {
 
     public Product getProductByProductId(int productId) {
         return productDAO.getProductById(productId);
+    }
+
+    public List<Product> getAllProducts() {
+        return productDAO.getAllProducts();
     }
 }

@@ -3,11 +3,11 @@ package com.ecommerce.back.jsonInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel(value = "JWTInfo", description = "JWT info after successful login")
+@ApiModel(value = "JWTInfo", description = "登陆成功后下发的JWT")
 public class JWTInfo {
-    @ApiModelProperty(value = "Key of JWT in Header")
+    @ApiModelProperty(value = "后续请求应该把token放在这个键值下")
     private String HeaderKey;
-    @ApiModelProperty(value = "JWT String")
+    @ApiModelProperty(value = "token字符串")
     private String jwtString;
 
     public JWTInfo(String headerKey, String jwtString) {

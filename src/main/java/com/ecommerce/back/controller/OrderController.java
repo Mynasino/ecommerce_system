@@ -10,6 +10,7 @@ import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.OrderService;
 import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,7 @@ public class OrderController {
         this.orderService = orderService;
     }
 
+    @ApiOperation("获取用户individualName的所有订单，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/order")
@@ -33,6 +35,7 @@ public class OrderController {
         return orderService.getOrdersOfSpecificUser(individualName);
     }
 
+    @ApiOperation("获取用户individualName的订单Id为orderId的订单下的所有订单项(orderItem)，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/order/orderItem")
@@ -41,6 +44,7 @@ public class OrderController {
         return orderService.getOrderItemsByOrderId(individualName, orderId);
     }
 
+    @ApiOperation("获取用户individualName的购物车Id，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/shoppingCart")
@@ -52,6 +56,7 @@ public class OrderController {
         return jsonObject.toJSONString();
     }
 
+    @ApiOperation("向购物车Id为shoppingCartId的购物车添加count个商品(初次加购物车)，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PatchMapping("/shoppingCart")
@@ -62,6 +67,7 @@ public class OrderController {
         orderService.addOrderItemToShoppingCart(individualName, shoppingCartId, productId, count);
     }
 
+    @ApiOperation("加购物车后修改商品购买数量，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PatchMapping("/shoppingCart/orderItem")
@@ -72,6 +78,7 @@ public class OrderController {
         orderService.modifyOrderItemCount(individualName, shoppingCartId, productId, count);
     }
 
+    @ApiOperation("删除购物车里的某个商品，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @DeleteMapping("/shoppingCart")
@@ -81,6 +88,7 @@ public class OrderController {
         orderService.deleteOrderItemInShoppingCart(individualName, shoppingCartId, productId);
     }
 
+    @ApiOperation("购物车里的提交订单功能，需要带上地址和手机号，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @PutMapping("/shoppingCart")
