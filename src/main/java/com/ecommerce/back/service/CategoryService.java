@@ -4,12 +4,14 @@ import com.ecommerce.back.dao.CategoryFirstDAO;
 import com.ecommerce.back.dao.CategorySecondDAO;
 import com.ecommerce.back.dao.ProductDAO;
 import com.ecommerce.back.exception.IllegalException;
+import com.ecommerce.back.jsonInfo.CategoryFirstDetail;
 import com.ecommerce.back.model.CategoryFirst;
 import com.ecommerce.back.model.CategorySecond;
 import com.ecommerce.back.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -49,6 +51,28 @@ public class CategoryService {
      */
     public List<CategoryFirst> getAllCategoryFirsts() {
         return categoryFirstDAO.getAllCategoryFirsts();
+    }
+
+    /**
+     * 获得所有一级分类详情
+     * @return 所有一级分类详情
+     */
+    public List<CategoryFirstDetail> getAllCategoryFirstDetails() {
+        List<CategoryFirst> categoryFirsts = categoryFirstDAO.getAllCategoryFirsts();
+        List<CategoryFirstDetail> categoryFirstDetails = new ArrayList<>();
+        for (CategoryFirst categoryFirst : categoryFirsts) {
+            CategoryFirstDetail categoryFirstDetail = new CategoryFirstDetail();
+            categoryFirstDetail.setId(categoryFirst.getId());
+            categoryFirstDetail.setName(categoryFirst.getName());
+            categoryFirstDetail.setCount(categoryFirst.getCount());
+            categoryFirstDetail.setCategorySeconds(
+                    categorySecondDAO.getCategorySecondsByCategoryFirstId(categoryFirst.getId())
+                    );
+
+            categoryFirstDetails.add(categoryFirstDetail);
+        }
+
+        return categoryFirstDetails;
     }
 
     /**

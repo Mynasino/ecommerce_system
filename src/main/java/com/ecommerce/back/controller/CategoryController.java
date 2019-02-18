@@ -1,6 +1,7 @@
 package com.ecommerce.back.controller;
 
 import com.ecommerce.back.exception.IllegalException;
+import com.ecommerce.back.jsonInfo.CategoryFirstDetail;
 import com.ecommerce.back.model.CategoryFirst;
 import com.ecommerce.back.model.CategorySecond;
 import com.ecommerce.back.model.Product;
@@ -30,6 +31,12 @@ public class CategoryController {
     @GetMapping("/")
     public List<CategoryFirst> getAllCategoryFirsts() {
         return categoryService.getAllCategoryFirsts();
+    }
+
+    @ApiOperation("获取所有一级分类，同时得到下属所有二级分类")
+    @GetMapping("/all")
+    public List<CategoryFirstDetail> getAllCategoryFirstDetails() {
+        return categoryService.getAllCategoryFirstDetails();
     }
 
     @ApiOperation("获取一级分类Id为categoryFirstId下属的所有二级分类")
