@@ -51,14 +51,10 @@ public class OrderService {
 
     /**
      * 根据订单Id获取该订单下所有订单项
-     * @param userName 用户名
      * @param orderId 订单Id
      * @return 订单项列表
-     * @throws IllegalException 订单Id不存在
-     * @throws UnauthorizedException 该用户不是订单的拥有者
      */
-    public List<OrderItem> getOrderItemsByOrderId(String userName, int orderId) throws IllegalException, UnauthorizedException {
-        validationOfUserToOrderId(userName, orderId);
+    public List<OrderItem> getOrderItemsByOrderId(int orderId) {
         return orderItemDAO.getOrderItemByOrderId(orderId);
     }
 
@@ -68,33 +64,32 @@ public class OrderService {
      * @return 创建的订单Id
      * @throws IllegalException 信息不合法
      */
-    public Integer getOrCreateShoppingCartIdByUserName(String userName) throws IllegalException {
+    public Order getOrCreateShoppingCartIdByUserName(String userName) throws IllegalException {
         User user = userDAO.getUserByUserName(userName);
         if (user == null) throw new IllegalException("用户名", userName, "不存在");
 
-        Integer shoppingCartId;
-        shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+        Order shoppingCart;
+        shoppingCart = orderDAO.getShoppingCartByUserId(user.getId());
         //如果存在购物车，直接返回
-        if (shoppingCartId != null) return shoppingCartId;
+        if (shoppingCart != null) return shoppingCart;
         //如果不存在对应用户的购物车，需要锁住对应用户名的ReentrantLock，防止重复创建购物车
         Statistic.userNameLock.putIfAbsent(userName, new Object());
         synchronized (Statistic.userNameLock.get(userName)) {
-            shoppingCartId = orderDAO.getShoppingCartOrderIdByUserId(user.getId());
+            shoppingCart = orderDAO.getShoppingCartByUserId(user.getId());
             //仍然不存在购物车，则需要创建购物车
-            if (shoppingCartId == null) {
-                Order newShoppingCart = new Order();
-                newShoppingCart.setUserId(user.getId());
-                newShoppingCart.setCreateTime(new Date());
-                newShoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
-                //生成主键注入到newShoppingCart对象
-                orderDAO.addOrder(newShoppingCart);
-                //返回生成的主键
-                return newShoppingCart.getId();
+            if (shoppingCart == null) {
+                shoppingCart = new Order();
+                shoppingCart.setUserId(user.getId());
+                shoppingCart.setCreateTime(new Date());
+                shoppingCart.setStatusCode(OrderStatus.SHOPPING_CART);
+                //生成主键注入到shoppingCart对象
+                orderDAO.addOrder(shoppingCart);
             }
         }
         Statistic.userNameLock.remove(userName);
 
-        return shoppingCartId;
+        //返回生成的购物车
+        return shoppingCart;
     }
 
     /**

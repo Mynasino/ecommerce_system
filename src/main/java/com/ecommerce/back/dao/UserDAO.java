@@ -2,11 +2,7 @@ package com.ecommerce.back.dao;
 
 import com.ecommerce.back.model.User;
 
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Update;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -23,8 +19,8 @@ public interface UserDAO {
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE id = #{id}"})
     User getUserById(int id);
 
-    @Select(value = {"SELECT id FROM ", TABLE_NAME})
-    List<Integer> getUserIds();
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " LIMIT #{limit} OFFSET #{offset}"})
+    List<User> getUsersByLimitAndOffset(@Param("limit") int limit, @Param("offset") int offset);
 
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_name = #{userName}"})
     User getUserByUserName(String userName);

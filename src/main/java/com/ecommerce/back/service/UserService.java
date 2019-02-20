@@ -167,6 +167,13 @@ public class UserService {
     }
 
     /**
+     * 用户列表分页
+     */
+    public List<User> getUsersByLimitAndOffset(int limit, int offset) {
+        return userDAO.getUsersByLimitAndOffset(limit, offset);
+    }
+
+    /**
      * 根据给定的用户Name和商品Id来收藏商品
      * 数据库内加级联外键约束防止无效收藏
      * 将用户Id和商品Id作为联合主键来防止重复收藏

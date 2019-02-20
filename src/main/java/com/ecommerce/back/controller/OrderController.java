@@ -3,6 +3,7 @@ package com.ecommerce.back.controller;
 import com.alibaba.fastjson.JSONObject;
 import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.exception.UnauthorizedException;
+import com.ecommerce.back.jsonInfo.OrderInfo;
 import com.ecommerce.back.model.Order;
 import com.ecommerce.back.model.OrderItem;
 import com.ecommerce.back.security.AuthenticationLevel;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -31,29 +33,26 @@ public class OrderController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/order")
-    public List<Order> getOrdersOfSpecificUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
-        return orderService.getOrdersOfSpecificUser(individualName);
+    public List<OrderInfo> getOrdersOfSpecificUser(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
+        List<Order> orders = orderService.getOrdersOfSpecificUser(individualName);
+        List<OrderInfo> orderInfos = new ArrayList<>();
+        for (Order order : orders)
+            orderInfos.add(
+                    new OrderInfo(order, orderService.getOrderItemsByOrderId(order.getId()))
+            );
+
+        return orderInfos;
     }
 
-    @ApiOperation("获取用户individualName的订单Id为orderId的订单下的所有订单项(orderItem)，需要在请求头放individualName的token")
-    @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
-    @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
-    @GetMapping("/order/orderItem")
-    public List<OrderItem> getOrderItemsOfSpecificOrder(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName,
-                                                    @RequestParam("orderId") int orderId) throws IllegalException, UnauthorizedException {
-        return orderService.getOrderItemsByOrderId(individualName, orderId);
-    }
-
-    @ApiOperation("获取用户individualName的购物车Id，需要在请求头放individualName的token")
+    @ApiOperation("获取用户individualName的购物车，需要在请求头放individualName的token")
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.USER}, specifics = {true})
     @GetMapping("/shoppingCart")
-    public String getShoppingCartId(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
-        Integer shoppingCartId = orderService.getOrCreateShoppingCartIdByUserName(individualName);
-        if (shoppingCartId == null) throw new IllegalException("用户名", individualName, " 创建购物车失败");
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("shoppingCartId", shoppingCartId);
-        return jsonObject.toJSONString();
+    public OrderInfo getShoppingCartId(@RequestParam(JWTUtil.SPECIFIC_PARAM_NAME) String individualName) throws IllegalException {
+        Order shoppingCart = orderService.getOrCreateShoppingCartIdByUserName(individualName);
+        if (shoppingCart == null) throw new IllegalException("用户名", individualName, " 创建购物车失败");
+
+        return new OrderInfo(shoppingCart, orderService.getOrderItemsByOrderId(shoppingCart.getId()));
     }
 
     @ApiOperation("向购物车Id为shoppingCartId的购物车添加count个商品(初次加购物车)，需要在请求头放individualName的token")

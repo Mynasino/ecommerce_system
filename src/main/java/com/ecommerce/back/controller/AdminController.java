@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -34,6 +35,14 @@ public class AdminController {
     public OnlineUsersInfo getOnlineStatistic() {
         Set<String> keySet = Statistic.onlineUsers.keySet();
         return new OnlineUsersInfo(keySet.size(), keySet);
+    }
+
+    @ApiOperation("获取所有用户，需要在header放管理员token")
+    @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
+    @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
+    @GetMapping(value = "/users")
+    public List<User> getUsersByLimitAndOffset(@RequestParam("limit") int limit, @RequestParam("offset") int offset) {
+        return userService.getUsersByLimitAndOffset(limit, offset);
     }
 
     @ApiOperation("查询用户名为individualName的用户的信息，需要在header放管理员token")

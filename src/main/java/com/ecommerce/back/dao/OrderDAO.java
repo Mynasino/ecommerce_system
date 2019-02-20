@@ -22,8 +22,8 @@ public interface OrderDAO {
     @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_id = #{userId}"})
     List<Order> getOrdersByUserId(int userId);
 
-    @Select(value = {"SELECT id FROM ", TABLE_NAME, " WHERE user_id = #{userId} AND status_code = " + OrderStatus.SHOPPING_CART})
-    Integer getShoppingCartOrderIdByUserId(int userId);
+    @Select(value = {"SELECT ", SELECT_FIELDS, " FROM ", TABLE_NAME, " WHERE user_id = #{userId} AND status_code = " + OrderStatus.SHOPPING_CART})
+    Order getShoppingCartByUserId(int userId);
 
     @Insert(value = {"INSERT INTO ", TABLE_NAME, "(", INSERT_FIELDS_DB, ") ",
             "VALUES(", INSERT_FIELDS, ")"})
