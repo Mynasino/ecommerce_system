@@ -6,10 +6,12 @@ import com.ecommerce.back.exception.UnauthorizedException;
 import com.ecommerce.back.jsonInfo.OrderInfo;
 import com.ecommerce.back.model.Order;
 import com.ecommerce.back.model.OrderItem;
+import com.ecommerce.back.model.Product;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
 import com.ecommerce.back.security.util.JWTUtil;
 import com.ecommerce.back.service.OrderService;
+import com.ecommerce.back.service.ProductService;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +25,27 @@ import java.util.List;
 @RequestMapping(produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
 public class OrderController {
     private OrderService orderService;
+    private ProductService productService;
 
     @Autowired
-    public OrderController(OrderService orderService) {
+    public OrderController(OrderService orderService, ProductService productService) {
         this.orderService = orderService;
+        this.productService = productService;
+    }
+
+    private OrderInfo getOrderInfoByOrder(Order order) {
+        List<OrderItem> orderItems = orderService.getOrderItemsByOrderId(order.getId());
+        List<Product> products = new ArrayList<>();
+        List<Integer> productCounts = new ArrayList<>();
+        for (OrderItem orderItem : orderItems) {
+            Product product = productService.getProductByProductId(orderItem.getProductId());
+            if (product != null) {
+                products.add(product);
+                productCounts.add(orderItem.getCount());
+            }
+        }
+
+        return new OrderInfo(order, products, productCounts);
     }
 
     @ApiOperation("获取用户individualName的所有订单，需要在请求头放individualName的token")
@@ -38,7 +57,7 @@ public class OrderController {
         List<OrderInfo> orderInfos = new ArrayList<>();
         for (Order order : orders)
             orderInfos.add(
-                    new OrderInfo(order, orderService.getOrderItemsByOrderId(order.getId()))
+                    getOrderInfoByOrder(order)
             );
 
         return orderInfos;
@@ -52,7 +71,7 @@ public class OrderController {
         Order shoppingCart = orderService.getOrCreateShoppingCartIdByUserName(individualName);
         if (shoppingCart == null) throw new IllegalException("用户名", individualName, " 创建购物车失败");
 
-        return new OrderInfo(shoppingCart, orderService.getOrderItemsByOrderId(shoppingCart.getId()));
+        return getOrderInfoByOrder(shoppingCart);
     }
 
     @ApiOperation("向购物车Id为shoppingCartId的购物车添加count个商品(初次加购物车)，需要在请求头放individualName的token")

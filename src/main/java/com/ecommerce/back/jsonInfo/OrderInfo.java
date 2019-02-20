@@ -2,6 +2,7 @@ package com.ecommerce.back.jsonInfo;
 
 import com.ecommerce.back.model.Order;
 import com.ecommerce.back.model.OrderItem;
+import com.ecommerce.back.model.Product;
 
 import java.util.Date;
 import java.util.List;
@@ -15,11 +16,12 @@ public class OrderInfo {
     private Date deliveryTime;
     private int userId;
     private int statusCode;
-    private List<OrderItem> orderItems;
+    private List<Product> products;
+    private List<Integer> productCounts;
 
     public OrderInfo() {}
 
-    public OrderInfo(Order order, List<OrderItem> orderItems) {
+    public OrderInfo(Order order, List<Product> products, List<Integer> productCounts) {
         this.id = order.getId();
         this.address = order.getAddress();
         this.mobile = order.getMobile();
@@ -28,7 +30,8 @@ public class OrderInfo {
         this.deliveryTime = order.getDeliveryTime();
         this.userId = order.getUserId();
         this.statusCode = order.getStatusCode();
-        this.orderItems = orderItems;
+        this.products = products;
+        this.productCounts = productCounts;
     }
 
     public int getId() {
@@ -95,11 +98,19 @@ public class OrderInfo {
         this.statusCode = statusCode;
     }
 
-    public List<OrderItem> getOrderItems() {
-        return orderItems;
+    public List<Product> getProducts() {
+        return products;
     }
 
-    public void setOrderItems(List<OrderItem> orderItems) {
-        this.orderItems = orderItems;
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
+
+    public List<Integer> getProductCounts() {
+        return productCounts;
+    }
+
+    public void setProductCounts(List<Integer> productCounts) {
+        this.productCounts = productCounts;
     }
 }
