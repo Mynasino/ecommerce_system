@@ -3,6 +3,7 @@ package com.ecommerce.back.dao;
 import com.ecommerce.back.model.User;
 
 import org.apache.ibatis.annotations.*;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -38,6 +39,13 @@ public interface UserDAO {
     @Update(value = {"UPDATE ", TABLE_NAME, " SET password = #{password} WHERE user_name = #{userName}"})
     void updateUserPassword(User user);
 
-    @Update(value = {"UPDATE ", TABLE_NAME, " SET ",UPDATE_FIELDS," WHERE id = #{id}"})
-    void updateUser(User user);
+    /**
+     * 绑定SQL在UserDAOMapper.xml中，允许password和imgUrl为null，表示不更新
+     */
+    void updateUser(@Param("userId") int userId,
+                    @Param("userName") String userName,
+                    @Param("password") @Nullable String password,
+                    @Param("salt") @Nullable String salt,
+                    @Param("imgUrl") @Nullable String imgUrl,
+                    @Param("mail") String mail);
 }

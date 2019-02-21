@@ -3,6 +3,7 @@ package com.ecommerce.back.controller;
 import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.jsonInfo.OnlineUsersInfo;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
+import com.ecommerce.back.jsonInfo.UpdateUserInfo;
 import com.ecommerce.back.model.User;
 import com.ecommerce.back.security.AuthenticationLevel;
 import com.ecommerce.back.security.AuthenticationRequired;
@@ -57,9 +58,9 @@ public class AdminController {
     @ApiImplicitParam(paramType = "header", name = JWTUtil.HEADER_KEY, required = true)
     @AuthenticationRequired(levels = {AuthenticationLevel.ADMIN}, specifics = {false})
     @PutMapping(value = "/user")
-    public void modifyUser(@RequestBody RegisterInfo registerInfo,
+    public void modifyUser(@RequestBody UpdateUserInfo updateUserInfo,
                              @RequestParam("userId") int id) throws IllegalException, IOException {
-        userService.updateUser(registerInfo, id);
+        userService.updateUser(updateUserInfo, id);
     }
 
     @ApiOperation("删除用户名为individualName的用户，需要在header放管理员token")

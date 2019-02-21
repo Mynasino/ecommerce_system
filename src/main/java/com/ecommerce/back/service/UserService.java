@@ -5,6 +5,7 @@ import com.ecommerce.back.dao.ProductDAO;
 import com.ecommerce.back.dao.UserDAO;
 import com.ecommerce.back.exception.IllegalException;
 import com.ecommerce.back.jsonInfo.RegisterInfo;
+import com.ecommerce.back.jsonInfo.UpdateUserInfo;
 import com.ecommerce.back.model.Product;
 import com.ecommerce.back.model.ProductCollection;
 import com.ecommerce.back.model.User;
@@ -70,6 +71,48 @@ public class UserService {
     }
 
     /**
+     * 检查更新用户所需信息(UpdateUserInfo)的合法性，合法则返回User实例，不合法则抛出异常
+     * @param updateUserInfo 更新一个用户所需的信息
+     * @throws IllegalException 信息不合法
+     * @throws IOException 上传图片IOException
+     */
+    private User checkUpdateUserInfoAndBuildUser(UpdateUserInfo updateUserInfo, int userId) throws IllegalException, IOException {
+        String userName = updateUserInfo.getUserName();
+        String password = updateUserInfo.getPassword();
+        String mailAddress = updateUserInfo.getMail();
+        String imgBase64String = updateUserInfo.getImgBase64String();
+
+        //检查更新信息是否合法
+        UserUtil.checkUserNameLegality(userName);
+        MailUtil.checkMailAddLegality(mailAddress);
+        if (!"".equals(password))
+            UserUtil.checkLegalPasswordLegality(password);
+        if (!"".equals(imgBase64String))
+            ImgUtil.checkImgBase64String(imgBase64String, 50000);
+
+        //如果当前用户名未重复且上传了图片，则将图片的Base64编码字符串上传并得到返回的图片URL
+        Integer userIdForUserName = userDAO.getUserIdByUserName(userName);
+        if (userIdForUserName != null && userIdForUserName != userId) throw new IllegalException("用户名", userName, "用户名已存在");
+        String newImgUrl = "";
+        if (!"".equals(imgBase64String)) {
+            newImgUrl = ImgUtil.Base64BytesToLocalImg(
+                    imgBase64String.getBytes(StandardCharsets.UTF_8),
+                    updateUserInfo.getImgType()
+            );
+        }
+
+        //构造用户实例，如果更新了密码，将明文密码加密
+        String salt = UUID.randomUUID().toString().substring(0,5);
+        if ("".equals(password)) { password = null; salt = null; }
+        if ("".equals(newImgUrl)) newImgUrl = null;
+        User user = new User(userName, password, newImgUrl, salt, mailAddress);
+        if (password != null)
+            UserUtil.passwordEncode(user);
+
+        return user;
+    }
+
+    /**
      * 注册一个用户，不允许用户名重复
      * @param registerInfo 注册一个用户所需的信息
      * @throws IllegalException 信息不合法
@@ -124,24 +167,24 @@ public class UserService {
 
     /**
      * 用注册所需信息对给定的用户Id进行更新，不允许重复用户名
-     * @param registerInfo 注册所需信息
+     * @param updateUserInfo 更新所需信息
      * @param userId 用户在数据库里的Id
      * @throws IllegalException 注册信息不合法
      * @throws IOException 上传图片IOException
      */
-    public void updateUser(RegisterInfo registerInfo, int userId) throws IllegalException, IOException {
+    public void updateUser(UpdateUserInfo updateUserInfo, int userId) throws IllegalException, IOException {
         //检查注册用户所需信息的合法性
-        User user = checkRegisterInfoAndBuildUser(registerInfo);
+        User user = checkUpdateUserInfoAndBuildUser(updateUserInfo, userId);
 
         String userName = user.getUserName();
         //对UserName放入对应的锁
         Statistic.userNameLock.putIfAbsent(userName,new Object());
         //尝试更新用户，需要锁住userName对应的锁
         synchronized (Statistic.userNameLock.get(userName)) {
-            if (userDAO.getUserIdByUserName(userName) != null)
-                throw new IllegalException("用户名", userName, "用户名已存在");
+            Integer userIdForUserName = userDAO.getUserIdByUserName(userName);
+            if (userIdForUserName != null && userIdForUserName != userId) throw new IllegalException("用户名", userName, "用户名已存在");
             user.setId(userId);
-            userDAO.updateUser(user);
+            userDAO.updateUser(user.getId(), user.getUserName(), user.getPassword(), user.getSalt(), user.getImgUrl(), user.getMail());
         }
         Statistic.userNameLock.remove(userName);
     }
