@@ -77,7 +77,7 @@ public class ProductService {
      */
     @Transactional(propagation = Propagation.REQUIRED) //多个更新操作，需要事务
     public void modifyProduct(NewProductInfo newProductInfo, int productId) throws IOException, IllegalException {
-        ProductUtil.checkNewProductInfoLegality(newProductInfo);
+        ProductUtil.checkUpdateProductInfoLegality(newProductInfo);
 
         //获取新商品的二级分类
         CategorySecond categorySecond = categorySecondDAO.getCategorySecondByName(newProductInfo.getCategorySecondName());
@@ -91,19 +91,24 @@ public class ProductService {
         CategorySecond originCategorySecond = categorySecondDAO.getCategorySecondById(originProduct.getCategorySecondId());
         if (originCategorySecond == null) throw new IllegalException("二级分类Id", originProduct.getCategorySecondId() + "", "不存在");
 
-        //如果商品名不存在，则上传多张图片，并构造新Product实例
-        if (productDAO.getProductByName(newProductInfo.getName()) != null) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
-        String[] imgBase64Strings = newProductInfo.getImgBase64Strings();
-        String[] imgTypes = newProductInfo.getImgTypes();
-        String[] imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
+        //如果商品名不存在且上传了图片，则上传多张图片
+        Product productIdByProductName = productDAO.getProductByName(newProductInfo.getName());
+        if (productIdByProductName != null && productIdByProductName.getId() != productId) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+        String[] imgUrls = null;
+        if (newProductInfo.getImgBase64Strings() != null && newProductInfo.getImgBase64Strings().length != 0) {
+            String[] imgBase64Strings = newProductInfo.getImgBase64Strings();
+            String[] imgTypes = newProductInfo.getImgTypes();
+            imgUrls = ImgUtil.MultiBase64StringsToLocalImg(imgBase64Strings, imgTypes);
+        }
+        //构造新Product实例
         Product newProduct = new Product(-1, newProductInfo.getName(), newProductInfo.getSubTitle(), newProductInfo.getPrice(),
                 newProductInfo.getStock(), newProductInfo.getSaleCount(), imgUrls, categorySecond.getId());
 
         //尝试更新商品，需要对ProductName对应加锁
         Statistic.productNameLock.putIfAbsent(newProduct.getName(), new Object());
         synchronized (Statistic.productNameLock.get(newProduct.getName())) {
-            if (productDAO.getProductByName(newProductInfo.getName()) != null)
-                throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
+            productIdByProductName = productDAO.getProductByName(newProductInfo.getName());
+            if (productIdByProductName != null && productIdByProductName.getId() != productId) throw new IllegalException("商品名", newProductInfo.getName(), "已存在");
             newProduct.setId(productId);
             productDAO.updateProductById(newProduct);
             //减少原来分类的商品数

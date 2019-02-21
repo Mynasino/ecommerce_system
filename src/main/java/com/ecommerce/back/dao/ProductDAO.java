@@ -39,6 +39,8 @@ public interface ProductDAO {
     @Delete(value = {"DELETE FROM ", TABLE_NAME, " WHERE name = #{name}"})
     void deleteProductByName(String name);
 
-    @Update(value = {"UPDATE ", TABLE_NAME, " SET ", UPDATE_FIELDS ," WHERE id = #{id}"})
+    /**
+     * 见ProductDAOMapper.xml，允许imgUrls为null，表示不更新
+     */
     void updateProductById(Product product);
 }

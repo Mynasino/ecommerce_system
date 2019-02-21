@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ecommerce.back.dao.ProductDAO" >
+    <update id="updateProductById">
+        UPDATE product
+        set
+            `name` = #{name},
+            sub_title = #{subTitle},
+            price = #{price},
+            stock = #{stock},
+            sale_count = #{saleCount},
+            category_second_id = #{categorySecondId}
+        <if test="imgUrls != null">
+            ,img_urls = #{imgUrls}
+        </if>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+</mapper>
